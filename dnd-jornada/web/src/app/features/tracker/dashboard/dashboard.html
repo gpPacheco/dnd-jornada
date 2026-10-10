@@ -1,0 +1,209 @@
+<!-- Toast Notification -->
+@if (toastMessage()) {
+  <div class="toast animate-fade-in" [class]="'toast toast-' + toastType()">
+    {{ toastMessage() }}
+  </div>
+}
+
+<div class="dashboard-layout">
+  <!-- Header -->
+  <header class="glass-panel">
+    <div class="header-content">
+      <div class="brand">⏱️ D&D Jornada</div>
+      <div class="user-area">
+        <div class="user-info">
+          <span class="user-name">{{ profile()?.full_name }}</span>
+          <span class="user-badge badge-employee">Colaborador</span>
+        </div>
+        <button class="btn-logout" (click)="logout()">Sair</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <!-- Clock + Action Card -->
+    <div class="clock-card glass-panel animate-fade-in">
+      <div class="clock-section">
+        <div class="current-date">
+          {{ currentTime() | date:'EEEE, d \'de\' MMMM \'de\' y' }}
+        </div>
+        <div class="current-time">
+          {{ currentTime() | date:'HH:mm:ss' }}
+        </div>
+        <div class="timezone-info">
+          📍 Fuso horário detectado: {{ currentTime() | date:'z' }}
+        </div>
+      </div>
+
+      <!-- Worked Hours Progress -->
+      <div class="hours-progress">
+        <div class="progress-label">
+          <span>Horas trabalhadas hoje</span>
+          <span class="hours-value" [class.hours-warning]="workedHours() >= 8" [class.hours-danger]="maxHoursReached()">
+            {{ formatWorkedHours(workedHours()) }}
+          </span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill"
+               [style.width.%]="(workedHours() / 10) * 100"
+               [class.fill-warning]="workedHours() >= 8"
+               [class.fill-danger]="maxHoursReached()">
+          </div>
+          <div class="progress-marker" style="left: 80%;" title="Limite padrão: 8h"></div>
+        </div>
+        <div class="progress-limits">
+          <span>0h</span>
+          <span class="limit-standard">8h (padrão)</span>
+          <span>10h (máx)</span>
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <div class="action-section">
+        @if (nextEvent().dayComplete) {
+          <div class="day-complete animate-fade-in">
+            <span class="complete-icon">✅</span>
+            <p class="complete-title">Jornada Encerrada</p>
+            <p class="complete-subtitle">Bom descanso! Seus registros do dia estão salvos.</p>
+          </div>
+        } @else {
+          @if (!businessHoursCheck().valid) {
+            <div class="business-hours-warning animate-fade-in">
+              <span class="warning-icon">🚫</span>
+              <p>{{ businessHoursCheck().message }}</p>
+            </div>
+          }
+
+          @if (maxHoursReached()) {
+            <div class="max-hours-warning animate-fade-in">
+              <span class="warning-icon">⚠️</span>
+              <p>Limite de 10h diárias atingido. Apenas encerrar jornada é permitido.</p>
+            </div>
+          }
+
+          <button
+            class="action-btn"
+            [class]="'action-btn btn-' + nextEvent().color"
+            [disabled]="actionLoading() || (!businessHoursCheck().valid)"
+            (click)="recordAction()">
+            @if (actionLoading()) {
+              <span class="spinner"></span> Registrando...
+            } @else {
+              <span class="action-icon">{{ nextEvent().icon }}</span>
+              <span class="action-label">{{ nextEvent().label }}</span>
+            }
+          </button>
+
+          <p class="action-hint">
+            @switch (nextEvent().type) {
+              @case ('CLOCK_IN') { Clique para iniciar sua jornada de trabalho. }
+              @case ('BREAK_START') { Clique para registrar o início da sua pausa/intervalo. }
+              @case ('BREAK_END') { Clique para registrar seu retorno da pausa. }
+              @case ('CLOCK_OUT') { Clique para encerrar sua jornada de trabalho. }
+            }
+          </p>
+        }
+      </div>
+    </div>
+
+    <!-- Business Rules Card -->
+    <div class="rules-card glass-panel animate-fade-in" style="animation-delay: 0.1s;">
+      <h3>📋 Regras do Expediente</h3>
+      <div class="rules-grid">
+        <div class="rule-item">
+          <span class="rule-icon">📅</span>
+          <div>
+            <strong>Dias</strong>
+            <p>Segunda a Sexta</p>
+          </div>
+        </div>
+        <div class="rule-item">
+          <span class="rule-icon">🕘</span>
+          <div>
+            <strong>Horário</strong>
+            <p>09:00 — 17:00</p>
+          </div>
+        </div>
+        <div class="rule-item">
+          <span class="rule-icon">⏳</span>
+          <div>
+            <strong>Jornada padrão</strong>
+            <p>8h / dia</p>
+          </div>
+        </div>
+        <div class="rule-item">
+          <span class="rule-icon">🛑</span>
+          <div>
+            <strong>Limite máximo</strong>
+            <p>10h / dia</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Weekly Table -->
+    <div class="week-card glass-panel animate-fade-in" style="animation-delay: 0.2s;">
+      <div class="week-header">
+        <h3>📊 Quadro Semanal</h3>
+        <div class="week-nav">
+          <button class="nav-btn" (click)="previousWeek()">◀</button>
+          <span class="week-range">{{ weekLabel() }}</span>
+          <button class="nav-btn" (click)="nextWeek()" [disabled]="isCurrentWeek()">▶</button>
+          @if (!isCurrentWeek()) {
+            <button class="nav-btn today-btn" (click)="goToCurrentWeek()">Hoje</button>
+          }
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Dia</th>
+              <th>Data</th>
+              <th>Entrada</th>
+              <th>Pausa</th>
+              <th>Retorno</th>
+              <th>Saída</th>
+              <th>Total</th>
+              <th>Fuso / Observações</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of weekRows(); track row.dateFormatted) {
+              <tr [class.row-today]="row.isToday" [class.row-weekend]="row.isWeekend">
+                <td class="day-name">{{ row.dayName }}</td>
+                <td>{{ row.dateFormatted }}</td>
+                <td>{{ row.clockIn }}</td>
+                <td>{{ row.breakStart }}</td>
+                <td>{{ row.breakEnd }}</td>
+                <td>{{ row.clockOut }}</td>
+                <td class="total-cell">
+                  {{ row.totalHours }}
+                  @if (row.isOvertime10h) {
+                    <span class="badge-alert" title="Atenção: Limite legal de 10h diárias ultrapassado">⚠️ >10h</span>
+                  }
+                </td>
+                <td>
+                  @if (row.timezoneId) {
+                    <span class="badge-tz" [title]="'Fuso: ' + row.timezoneId">
+                      @if (row.timezoneId.includes('Lisbon')) { 🇵🇹 Lisboa (UTC+1) }
+                      @else if (row.timezoneId.includes('Madrid')) { 🇪🇸 Madri (UTC+2) }
+                      @else { 🇧🇷 Brasil (UTC-3) }
+                    </span>
+                  }
+                  @if (row.isManualAdjustment) {
+                    <span class="badge-manual" [title]="row.justification || 'Ajuste Manual'">📝 Ajuste</span>
+                  }
+                  @if (!row.timezoneId && !row.isManualAdjustment) {
+                    —
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
