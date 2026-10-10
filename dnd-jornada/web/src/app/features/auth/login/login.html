@@ -1,0 +1,53 @@
+<div class="login-container">
+  <div class="glass-panel login-box animate-fade-in">
+    <div class="logo">
+      <div class="logo-icon">⏱️</div>
+      <h2>D&D Group</h2>
+      <p>Sistema de Jornada de Trabalho</p>
+    </div>
+
+    <form (ngSubmit)="handleLogin()">
+      <div class="form-group">
+        <label for="email">E-mail Corporativo</label>
+        <input
+          id="email"
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="colaborador@dndgroup.com"
+          autocomplete="email"
+          required
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="password">Senha</label>
+        <input
+          id="password"
+          type="password"
+          name="password"
+          [(ngModel)]="password"
+          placeholder="••••••••"
+          autocomplete="current-password"
+          required
+        >
+      </div>
+
+      @if (error()) {
+        <div class="error-msg animate-fade-in">{{ error() }}</div>
+      }
+
+      <button type="submit" class="primary w-100" [disabled]="loading()">
+        @if (loading()) {
+          <span class="spinner"></span> Entrando...
+        } @else {
+          Entrar
+        }
+      </button>
+    </form>
+
+    <div class="login-footer">
+      <p>Acesse com suas credenciais corporativas</p>
+    </div>
+  </div>
+</div>
