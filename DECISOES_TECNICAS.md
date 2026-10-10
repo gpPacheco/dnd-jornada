@@ -1,116 +1,85 @@
-# 🏛️ Documentação de Decisões Técnicas, Arquitetura & Regras de Negócio
+# 💡 Decisões Técnicas e Regras de Negócio
 
-Este documento detalha as decisões de engenharia, requisitos funcionais e não-funcionais, modelagem e regras de conformidade trabalhista implementadas na plataforma **D&D Jornada**.
-
----
-
-## 1. Justificativa da Escolha do Supabase
-
-### 1.1. Velocidade de Desenvolvimento em Desafio Técnico
-Por se tratar de um desafio técnico com prazo enxuto e escopo abrangente (envolvendo múltiplos perfis de usuários, fusos horários distintos e regras CLT), a **velocidade de entrega sem perda de qualidade** foi o principal direcionador arquitetural:
-- **BaaS (Backend-as-a-Service) Enterprise:** A escolha do Supabase evitou a criação manual de boilerplate repetitivo (servidores HTTP em Node/NestJS, rotas CRUD, ORMs e controle manual de tokens de sessão).
-- **Autenticação Padrão e Segura:** Utilização nativa do **Supabase Auth**, implementando emissão e renovação de tokens JWT assinados, hash seguro de senhas com algoritmo `bcrypt` e gerenciamento robusto de sessão.
-- **Foco no Domínio do Problema:** O tempo economizado na infraestrutura de backend foi 100% canalizado para o que realmente gera valor: experiência do usuário impecável (Single-Action UX), precisão de fusos horários, cálculo em UTC absoluto, conformidade trabalhista e acessibilidade.
+Este documento explica de forma simples e direta as escolhas de engenharia e as regras que pensamos para que o sistema funcione redondo no dia a dia, sem dores de cabeça para o colaborador, para a chefia ou para o RH.
 
 ---
 
-## 2. Decisão de Segurança: Ocultação do Banco de Dados no Repositório Público
+## 1. Por que escolhemos o Supabase?
 
-O repositório do projeto no GitHub é público. Por este motivo, foi adotada a seguinte diretriz de segurança defensiva:
+Quando encaramos um **desafio técnico**, o tempo é curto e cada hora conta. Em vez de gastar dias inteiros configurando servidor Node, rotas manuais, criptografia de senha e banco do zero, tomamos a decisão prática de usar o **Supabase como nosso intermediador de backend (BaaS)**:
 
-### 2.1. Ocultação Estrita da Pasta e Artefatos do Supabase
-- **Não declaração no repositório:** A pasta `supabase/`, os scripts de migração (`migrations/`), os arquivos DDL (`schema.sql`) e credenciais de serviço foram **estritamente ignorados via `.gitignore`**.
-- **Mitigação de Riscos de Engenharia Reversa:** A não exposição do schema evita que atores externos mapeiem a topologia de tabelas, nomes de colunas, índices e funções internas (`SECURITY DEFINER`) do banco de dados.
-- **Chave de Serviço Protegida:** A chave administrativa `service_role` nunca é enviada ao repositório nem injetada no bundle do frontend Angular, prevenindo acesso não autorizado com privilégios de superusuário.
-
-### 2.2. Row Level Security (RLS) Ativo no PostgreSQL
-A segurança do sistema **não depende de sigilo no cliente (Security through Obscurity)**, mas de políticas declarativas implementadas diretamente no PostgreSQL:
-- **Isolamento por Colaborador:** Políticas de RLS garantem que consultas `SELECT`, `INSERT` ou `UPDATE` realizadas com o token do usuário filtrem automaticamente `user_id = auth.uid()`. Mesmo inspecionando a chave `anon public` no navegador, nenhum colaborador consegue visualizar pontos alheios.
-- **Privilégios Hierárquicos:**
-  - **Gestor:** Visualiza apenas colaboradores cujo campo `manager_id` seja correspondente ao seu `auth.uid()`.
-  - **RH (Admin):** Possui permissão de visualização e fechamento contábil global validada via função `is_hr()`.
-- **Proteção Contra Adulteração:** Regras RLS impedem a alteração de pontos já computados em períodos com status `CLOSED`.
+- **Velocidade de entrega:** O Supabase já nos entrega um banco de dados **PostgreSQL** profissional, uma API pronta e segura, e atualizações em tempo real (Realtime). Isso nos permitiu focar 100% no que realmente importava para a empresa: criar uma experiência incrível de uso, cuidar das regras da CLT e resolver os fusos horários complexos entre Brasil e Europa.
+- **Autenticação padrão e confiável:** Usamos o sistema de login nativo do Supabase. Ele já gera tokens JWT modernos, criptografa as senhas com `bcrypt` e cuida de toda a segurança da sessão, sem precisarmos reinventar a roda.
 
 ---
 
-## 3. Requisitos e Regras de Negócio Implementadas
+## 2. Por que não enviamos arquivos do Supabase para o GitHub?
 
-Para garantir que o sistema funcione de forma robusta e sem falhas operacionais ou jurídicas, foram projetadas as seguintes regras de negócio:
+O nosso repositório no GitHub é **público**. Por isso, tomamos a decisão deliberada de segurança de **não subir nenhuma pasta do Supabase (`supabase/`), nenhum schema, script de migração ou chave secreta** para o Git:
 
-### 3.1. Máquina de Estados Finita e UX de Botão Único (Single-Action UX)
-Para eliminar erros comuns de duplo clique ou batidas em ordem invertida, o fluxo diário é controlado por uma máquina de estados finita:
-$$\text{Sem Batidas} \xrightarrow{\text{CLOCK\_IN}} \text{Trabalhando} \xrightarrow{\text{BREAK\_START}} \text{Em Pausa} \xrightarrow{\text{BREAK\_END}} \text{Trabalhando} \xrightarrow{\text{CLOCK\_OUT}} \text{Jornada Encerrada}$$
-- O colaborador visualiza **um único botão de ação dinâmico**, cujo texto, cor e ícone correspondem estritamente ao próximo passo permitido.
-- Não é possível bater "Saída" antes da "Entrada", nem registrar novo intervalo se a jornada já foi finalizada.
+- **Não expor como o banco foi arquitetado:** Se deixássemos o schema aberto no repositório, qualquer pessoa na internet saberia exatamente o nome de cada tabela, as colunas, as relações e como o sistema funciona por dentro. Ocultar essa estrutura reduz drasticamente a superfície de ataque.
+- **Segurança de verdade com RLS (Row Level Security):** O ponto mais importante é que a segurança do nosso sistema **não depende de esconder o código, mas sim das regras ativas dentro do próprio PostgreSQL**.
+  Com o **RLS ativado em todas as tabelas**, o próprio banco só devolve para o colaborador os pontos que pertencem a ele (`auth.uid()`). Mesmo que alguém tenha a chave pública do frontend, é o PostgreSQL quem barra qualquer tentativa de espionar ou alterar dados de outros usuários.
 
 ---
 
-### 3.2. Limite Diário de 10 Horas (Art. 59 da CLT) & Justificativa Obrigatória
-- **Jornada Padrão:** 8 horas diárias de trabalho.
-- **Teto Máximo Legal:** 10 horas diárias (8h normais + 2h extras permitidas por lei).
-- **Comportamento do Sistema ao Atingir 10 Horas:**
-  1. A barra de progresso diária muda para estado de alerta (`fill-danger`).
-  2. Novas entradas ou pausas são **bloqueadas**. O sistema habilita exclusivamente a ação de **Encerrar Jornada (`CLOCK_OUT`)**.
-  3. Ao registrar um ponto onde a jornada diária extrapolou 10 horas (como a batida do dia 06/10 com 10h30min em Madri), o sistema exige o registro de uma **justificativa formal**.
-  4. O registro é marcado com a tag visual `⚠️ >10h 🔍`, permitindo que o Colaborador, o Gestor e o RH abram um modal de auditoria para visualizar a motivação do excesso de jornada.
+## 3. Regras de Negócio Pensadas para o Sistema Funcionar Sem Falhas
+
+Pensamos em cada detalhe do dia a dia de trabalho para evitar que o sistema quebrasse ou que o colaborador fizesse besteira sem querer:
+
+### 3.1. Um botão só: o colaborador nunca bate o ponto errado
+Para evitar aquela clássica confusão de a pessoa clicar em "Saída" quando estava chegando, criamos um **fluxo sequencial automático**:
+- O colaborador olha para a tela e vê **apenas um botão principal**.
+- O botão só oferece o próximo passo lógico:
+  1. Primeiro clique: **"Registrar Entrada"**;
+  2. Depois: **"Iniciar Intervalo"**;
+  3. Depois: **"Retornar do Intervalo"**;
+  4. Por fim: **"Encerrar Jornada"**.
+- Não tem como errar a ordem, nem como dar dois cliques seguidos sem querer.
 
 ---
 
-### 3.3. Geolocalização com Precisão Real (GPS) e Tratamento de Recusa
-A aplicação solicita acesso à API de Geolocalização do navegador (`navigator.geolocation`) com alta precisão (`enableHighAccuracy: true`):
-- **Coleta de Coordenadas:** Captura latitude, longitude e margem de erro em metros (`accuracy`) no momento do registro.
-- **O que acontece se o colaborador NÃO ativar ou recusar o GPS?**
-  - **Direito Trabalhista Preservado:** O sistema **não bloqueia** o registro do ponto. Impedir a batida por falta de GPS constituiria ilícito trabalhista, pois privaria o trabalhador de comprovar suas horas trabalhadas.
-  - **Sinalização de Auditoria:** O ponto é gravado com sucesso, porém o sistema emite um aviso no painel e marca a ocorrência como **"Localização Não Verificada (GPS Desativado)"**.
-  - **Visibilidade para Liderança e RH:** O Gestor e o RH recebem a indicação de que o ponto foi batido sem validação de coordenadas geográficas, permitindo averiguação em casos de trabalho presencial obrigatório.
+### 3.2. A solicitação de GPS: e o que acontece se o colaborador não ligar?
+O sistema pede a permissão de localização do celular ou computador (`navigator.geolocation`) com precisão real em metros no momento de registrar o ponto.
+
+**E se o colaborador recusar ou estiver sem GPS?**
+- **O que NÃO fazemos:** Nós **não travamos** o registro do ponto. Legalmente, a empresa não pode impedir o trabalhador de registrar que trabalhou só porque o GPS falhou ou foi desligado (isso geraria um processo trabalhista grave).
+- **O que o sistema faz:** O ponto é registrado com sucesso para proteger o trabalhador, mas o sistema salva a ocorrência com um alerta explícito: **"Localização Não Verificada (GPS Desativado)"**.
+- **Resultado:** O colaborador consegue registrar suas horas, mas o gestor e o RH ficam sabendo na hora que aquele ponto não teve comprovação geográfica, podendo cobrar explicações se a função exigia presença física na empresa.
 
 ---
 
-### 3.4. Detecção de Inconsistências de Jornada (Batidas Ímpares)
-- Se em um dia útil anterior o colaborador registrou a entrada mas esqueceu de registrar a saída (ou não retornou do intervalo), o sistema detecta a **batida ímpar**.
-- Um alerta em destaque é exibido no topo do painel:
-  > *"Atenção: Inconsistência identificada: encerramento (saída) não registrado no dia anterior. Regularize com seu gestor."*
-- Isso impede que o colaborador acumule dias com cálculo distorcido sem prévia homologação gerencial.
+### 3.3. O limite de 10 horas diárias (Art. 59 da CLT)
+Pela CLT, a jornada normal é de 8 horas e o limite máximo permitido com horas extras é de 10 horas por dia. O sistema trata isso com firmeza:
+- **Ao bater 10 horas trabalhadas:** A tela avisa que o limite legal foi atingido e **bloqueia novas pausas ou reaberturas de expediente**. A única opção que sobra é **"Encerrar Jornada"**.
+- **Jornadas com mais de 10 horas (ex: o ponto de 10h30min em Madri):** Se por algum motivo excepcional de trabalho o colaborador ultrapassar as 10 horas, o sistema marca a batida com um alerta chamativo `⚠️ >10h 🔍`.
+- **Visualização da Justificativa:** Ao clicar nesse aviso, abre-se um modal detalhado tanto para o Colaborador, quanto para o Gestor e para o RH, mostrando a justificativa formal cadastrada para respaldar a empresa numa auditoria trabalhista.
 
 ---
 
-### 3.5. Operação Multi-Fuso Horário com Base UTC Central
-A empresa conta com colaboradores simultaneamente no **Brasil** (`America/Sao_Paulo`, UTC-3), **Portugal** (`Europe/Lisbon`, UTC+1) e **Espanha** (`Europe/Madrid`, UTC+2):
-- **Armazenamento em UTC:** Todas as batidas são persistidas em UTC absoluto (`timestamp_utc`).
-- **Cálculo Imune a Mudanças de Fuso:** A duração da jornada diária calcula a diferença em milissegundos absolutos transcorridos.
-  - *Exemplo de Viagem Internacional:* Se o colaborador inicia a jornada em Lisboa e encerra o dia após desembarcar em São Paulo, o sistema computa as horas reais trabalhadas sem distorções causadas pela alteração do relógio do dispositivo.
-- **Exibição Contextualizada:** O gestor e o RH conseguem visualizar tanto o horário no fuso de origem do registro quanto a conversão em UTC para efeito de auditoria comparativa.
+### 3.4. E se o colaborador esquecer de bater a saída no dia anterior?
+Se no dia anterior o colaborador bateu a entrada mas foi embora sem bater a saída (a famosa *batida ímpar*):
+- O sistema percebe automaticamente a pendência e coloca um banner de alerta no topo do painel:
+  > *"⚠️ Atenção: Inconsistência identificada: encerramento (saída) não registrado no dia anterior. Regularize com seu gestor."*
+- Isso evita que o colaborador passe dias com horas acumuladas de forma irreal.
 
 ---
 
-### 3.6. Fechamento de Folha e Imutabilidade (Portaria 671 do MTE)
-- **Congelamento Mensal:** O administrador de RH possui um módulo dedicado para "Fechar Período Mensal".
-- Ao fechar o período (como o mês de Outubro/2026), o registro correspondente na tabela `closing_periods` recebe o status `CLOSED`.
-- Qualquer tentativa de alteração manual, inserção ou exclusão de batida referente a um período fechado é rejeitada pelas regras de segurança RLS do PostgreSQL, garantindo integridade e validade jurídica para exportação contábil.
+### 3.5. Como resolvemos o quebra-cabeça dos Fusos Horários
+A empresa tem pessoas no Brasil (`UTC-3`), em Portugal (`UTC+1`) e na Espanha (`UTC+2`).
+- Se salvássemos o horário local direto no banco, quando um colaborador viajasse de Lisboa para São Paulo a contagem de horas ficaria completamente maluca.
+- **A nossa solução:** Todas as batidas são gravadas no banco em **UTC absoluto** (a hora universal neutra).
+- Quando o sistema calcula quanto tempo o colaborador trabalhou, ele calcula os milissegundos reais que se passaram no mundo. Não importa se o relógio do celular adiantou ou atrasou por causa de viagem ou horário de verão: a conta de horas trabalhadas é 100% matemática e exata.
 
 ---
 
-### 3.7. Auditoria de Alterações (`audit_logs`)
-- Toda alteração ou ajuste manual homologado gera um registro imutável na tabela `audit_logs`, contendo:
-  - ID da batida afetada (`time_entry_id`);
-  - Usuário responsável pela alteração (`changed_by`);
-  - Estado anterior e novo estado (JSONB);
-  - Carimbo temporal inviolável (`created_at`).
+### 3.6. Fechamento do mês pelo RH: passado não se altera
+Quando o mês acaba (como Outubro/2026), o RH acessa o painel e clica em **"Fechar Período"**:
+- O mês ganha o status de `CLOSED` no banco de dados.
+- A partir desse segundo, as regras de segurança (RLS) impedem qualquer alteração em pontos daquele mês. Ninguém consegue editar ou fraudar batidas antigas, garantindo que a folha de pagamento enviada para a contabilidade seja intocável.
 
 ---
 
-## 4. Resumo das Regras de Negócio e Tratativas
+## 4. Em resumo
 
-| Regra / Cenário | Comportamento do Sistema | Base Legal / Decisão Técnica |
-| :--- | :--- | :--- |
-| **Ponto dentro do expediente (09:00 - 17:00)** | Ação permitida normalmente com botão dinâmico. | Acordo de Horário Flexível. |
-| **Colaborador atinge 10h trabalhadas** | Bloqueia novas entradas/pausas; permite apenas `CLOCK_OUT`. | Art. 59 da CLT (Limite máximo diário). |
-| **Jornada ultrapassa 10h** | Exige justificativa formal; gera tag `⚠️ >10h 🔍` com modal. | Compliance Trabalhista. |
-| **Colaborador recusa permissão de GPS** | Registra o ponto com flag de "Localização não verificada". | Proteção do direito de registro do trabalhador. |
-| **Colaborador esquece de bater a saída** | Detecta batida ímpar e emite banner de inconsistência. | Prevenção de passivo trabalhista. |
-| **Colaborador em trânsito internacional** | Horas calculadas por diferença de milissegundos em UTC. | Arquitetura distribuída resiliente a fusos. |
-| **Período mensal fechado pelo RH** | Pontos tornam-se somente-leitura; RLS rejeita alterações. | Portaria 671 MTE / Fechamento Contábil. |
-
----
-
-*Documento elaborado como referência técnica e arquitetural da plataforma D&D Jornada.*
+O sistema foi desenhado para ser **amigável para quem usa todos os dias**, **justo com o colaborador** (sem bloqueá-lo injustamente) e **blindado para a empresa** (com auditoria, regras da CLT e segurança no banco).
