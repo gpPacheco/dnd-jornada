@@ -179,7 +179,9 @@
                       <td class="total-cell">
                         {{ day.totalHours }}
                         @if (day.isOvertime10h) {
-                          <span class="badge-pill-alert" title="Limite diário de 10h excedido">⚠️ >10h</span>
+                          <button class="badge-pill-alert btn-badge" (click)="$event.stopPropagation(); openJustification(member.profile.full_name, day)" title="Clique para abrir e analisar justificativa">
+                            ⚠️ >10h 🔍
+                          </button>
                         }
                       </td>
                       <td>
@@ -194,10 +196,12 @@
                             }
                           </span>
                         }
-                        @if (day.isManualAdjustment) {
-                          <span class="badge-manual" [title]="day.justification || 'Ajuste Manual'">📝 Justificado</span>
+                        @if (day.isManualAdjustment || day.justification) {
+                          <button class="badge-manual btn-badge" (click)="$event.stopPropagation(); openJustification(member.profile.full_name, day)" title="Clique para abrir a justificativa formal">
+                            📝 Justificado
+                          </button>
                         }
-                        @if (!day.timezoneId && !day.isManualAdjustment) {
+                        @if (!day.timezoneId && !day.isManualAdjustment && !day.justification) {
                           —
                         }
                       </td>
@@ -211,4 +215,66 @@
       }
     </div>
   </main>
+
+  <!-- Modal de Visualização da Justificativa para o Gestor -->
+  @if (selectedJustification()) {
+    <div class="modal-backdrop animate-fade-in" (click)="closeJustification()">
+      <div class="modal-dialog glass-panel" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-row">
+            <span class="modal-icon">👔</span>
+            <div>
+              <h3>Auditoria de Justificativa — Gestão de Equipe</h3>
+              <span class="modal-subtitle">Colaborador: {{ selectedJustification()!.employeeName }}</span>
+            </div>
+          </div>
+          <button class="modal-close-btn" (click)="closeJustification()">✕</button>
+        </div>
+
+        <div class="modal-body">
+          @if (selectedJustification()!.isOvertime10h) {
+            <div class="alert-box-warning">
+              <span class="alert-box-icon">⚠️</span>
+              <div>
+                <strong>Alerta de Extrapolação de Jornada (>10h)</strong>
+                <p>O colaborador ultrapassou 10h diárias neste dia. Como gestor imediato, verifique a motivação e a compensação no banco de horas.</p>
+              </div>
+            </div>
+          }
+
+          <div class="modal-details-grid">
+            <div class="detail-item">
+              <span class="detail-label">Data da Ocorrência</span>
+              <span class="detail-val">{{ selectedJustification()!.dayName }}, {{ selectedJustification()!.dateFormatted }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Carga Registrada</span>
+              <span class="detail-val highlight-val">{{ selectedJustification()!.totalHours }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Horários (Entrada / Saída)</span>
+              <span class="detail-val">{{ selectedJustification()!.clockIn }} ➔ {{ selectedJustification()!.clockOut }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Fuso Horário Operacional</span>
+              <span class="detail-val">{{ selectedJustification()!.timezoneId || 'UTC Padrão' }}</span>
+            </div>
+          </div>
+
+          <div class="justification-content-box">
+            <span class="box-title">📝 Justificativa Submetida pelo Colaborador:</span>
+            <p class="justification-text">{{ selectedJustification()!.justification }}</p>
+          </div>
+
+          <div class="compliance-footer-note">
+            <span>🛡️ Ponto registrado com segurança no Supabase sob governança corporativa D&D Group.</span>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-modal-close" (click)="closeJustification()">Concluir Análise</button>
+        </div>
+      </div>
+    </div>
+  }
 </div>

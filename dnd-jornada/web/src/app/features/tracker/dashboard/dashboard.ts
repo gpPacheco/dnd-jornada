@@ -42,6 +42,23 @@ export class Dashboard implements OnInit, OnDestroy {
   toastMessage = signal('');
   toastType = signal<'success' | 'error' | 'warning'>('success');
 
+  // Geolocalização
+  geolocation = signal<{ lat: number; lng: number; accuracy: number } | null>(null);
+  geoStatus = signal<'idle' | 'requesting' | 'granted' | 'denied' | 'unavailable'>('idle');
+  geoMessage = signal<string>('Clique para validar precisão real do GPS');
+
+  // Modal de Justificativa
+  selectedJustification = signal<{
+    dateFormatted: string;
+    dayName: string;
+    totalHours: string;
+    timezoneId?: string;
+    justification: string;
+    isOvertime10h: boolean;
+    clockIn: string;
+    clockOut: string;
+  } | null>(null);
+
   // Semana selecionada
   selectedWeekStart = signal(this.getMonday(new Date()));
 
@@ -71,6 +88,9 @@ export class Dashboard implements OnInit, OnDestroy {
   async ngOnInit() {
     this.timerRef = setInterval(() => this.currentTime.set(new Date()), 1000);
 
+    // Solicita geolocalização do colaborador para precisão real
+    this.requestGeolocation();
+
     const session = await this.supabase.getSession();
     if (!session?.user) {
       this.router.navigate(['/']);
@@ -92,6 +112,66 @@ export class Dashboard implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.timerRef) clearInterval(this.timerRef);
+  }
+
+  // --- Geolocalização com Precisão Real ---
+
+  requestGeolocation(): Promise<{ lat: number; lng: number; accuracy: number } | null> {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      this.geoStatus.set('unavailable');
+      this.geoMessage.set('Geolocalização não suportada neste navegador.');
+      return Promise.resolve(null);
+    }
+
+    this.geoStatus.set('requesting');
+    this.geoMessage.set('Obtendo coordenadas GPS com precisão real...');
+
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const loc = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            accuracy: Math.round(pos.coords.accuracy)
+          };
+          this.geolocation.set(loc);
+          this.geoStatus.set('granted');
+          this.geoMessage.set(`GPS Ativo: ${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)} (±${loc.accuracy}m)`);
+          resolve(loc);
+        },
+        (err) => {
+          console.warn('Geolocation denied or error:', err.message);
+          this.geoStatus.set('denied');
+          if (err.code === 1) { // PERMISSION_DENIED
+            this.geoMessage.set('Permissão de GPS necessária para validação de presença física.');
+          } else {
+            this.geoMessage.set('Não foi possível obter coordenadas GPS no momento.');
+          }
+          resolve(null);
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      );
+    });
+  }
+
+  // --- Modal de Justificativa ---
+
+  openJustification(row: DayRow) {
+    if (!row.justification && !row.isOvertime10h) return;
+    this.selectedJustification.set({
+      dateFormatted: row.dateFormatted,
+      dayName: row.dayName,
+      totalHours: row.totalHours,
+      timezoneId: row.timezoneId,
+      justification: row.justification || 'Jornada excedeu o limite legal de 10 horas diárias (Art. 59 da CLT). Justificativa técnica requerida para auditoria.',
+      isOvertime10h: row.isOvertime10h,
+      clockIn: row.clockIn,
+      clockOut: row.clockOut
+    });
+  }
+
+  closeJustification() {
+    this.selectedJustification.set(null);
   }
 
   // --- Data Loading ---
@@ -146,6 +226,11 @@ export class Dashboard implements OnInit, OnDestroy {
       this.actionLoading.set(true);
       const userId = this.supabase.currentUser?.id;
       if (!userId) return;
+
+      // Garante solicitação de precisão real de geolocalização no momento do registro
+      if (this.geoStatus() !== 'granted') {
+        await this.requestGeolocation();
+      }
 
       const { error } = await this.supabase.recordTimeEntry(userId, next.type);
       if (error) throw error;

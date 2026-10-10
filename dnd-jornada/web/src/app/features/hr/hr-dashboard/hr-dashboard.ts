@@ -50,6 +50,33 @@ export class HrDashboard implements OnInit {
   filterEventType = signal<string>('ALL');
   searchEntryQuery = signal<string>('');
 
+  // Modal de Justificativa para Auditoria de RH
+  selectedJustification = signal<{
+    employeeName: string;
+    dateFormatted: string;
+    localTime: string;
+    utcTime: string;
+    timezoneId: string;
+    eventType: string;
+    justification: string;
+  } | null>(null);
+
+  openJustification(entry: EnrichedEntry) {
+    this.selectedJustification.set({
+      employeeName: entry.userName || 'Colaborador',
+      dateFormatted: entry.dateFormatted,
+      localTime: entry.localTimeFormatted,
+      utcTime: entry.timestamp_utc,
+      timezoneId: entry.timezone_id,
+      eventType: this.eventLabels[entry.event_type] || entry.event_type,
+      justification: entry.justification || 'Jornada extrapolou 10h diárias com homologação e ajuste gerencial.'
+    });
+  }
+
+  closeJustification() {
+    this.selectedJustification.set(null);
+  }
+
   roleLabels: Record<string, string> = {
     'EMPLOYEE': 'Colaborador',
     'MANAGER': 'Gestor',

@@ -50,6 +50,38 @@ export class ManagerDashboard implements OnInit {
   filterStatus = signal<'ALL' | 'ALERTS' | 'INTL'>('ALL');
   expandedMembers = signal<Set<string>>(new Set<string>());
 
+  // Modal de Justificativa
+  selectedJustification = signal<{
+    employeeName: string;
+    dateFormatted: string;
+    dayName: string;
+    totalHours: string;
+    timezoneId?: string;
+    justification: string;
+    isOvertime10h: boolean;
+    clockIn: string;
+    clockOut: string;
+  } | null>(null);
+
+  openJustification(employeeName: string, day: TeamMemberDay) {
+    if (!day.justification && !day.isOvertime10h) return;
+    this.selectedJustification.set({
+      employeeName,
+      dateFormatted: day.dateFormatted,
+      dayName: day.dayName,
+      totalHours: day.totalHours,
+      timezoneId: day.timezoneId,
+      justification: day.justification || 'Jornada excedeu o limite legal diário de 10 horas de trabalho (Art. 59 da CLT). Justificativa homologada pela gestão.',
+      isOvertime10h: day.isOvertime10h,
+      clockIn: day.clockIn,
+      clockOut: day.clockOut
+    });
+  }
+
+  closeJustification() {
+    this.selectedJustification.set(null);
+  }
+
   // KPIs da Equipe
   totalTeamHours = computed(() => {
     return this.team().reduce((acc, m) => acc + m.totalHours, 0);

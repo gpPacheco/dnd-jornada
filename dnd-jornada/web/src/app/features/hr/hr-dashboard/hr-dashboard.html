@@ -240,9 +240,9 @@
                     </td>
                     <td>
                       @if (entry.is_manual_adjustment) {
-                        <span class="badge-manual" [title]="entry.justification || ''">
-                          📝 {{ entry.justification || 'Ajuste manual homologado' }}
-                        </span>
+                        <button class="badge-manual btn-badge" (click)="openJustification(entry)" title="Clique para abrir e auditar a justificativa">
+                          📝 Ver Justificativa ({{ (entry.justification || '').substring(0, 32) }}...)
+                        </button>
                       } @else {
                         <span class="text-valid">✓ Registro eletrônico direto</span>
                       }
@@ -320,4 +320,64 @@
       </div>
     }
   </main>
+
+  <!-- Modal de Auditoria da Justificativa para o RH -->
+  @if (selectedJustification()) {
+    <div class="modal-backdrop animate-fade-in" (click)="closeJustification()">
+      <div class="modal-dialog glass-panel" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-row">
+            <span class="modal-icon">⚖️</span>
+            <div>
+              <h3>Auditoria de Justificativa de Ponto — RH Corporativo</h3>
+              <span class="modal-subtitle">Colaborador: {{ selectedJustification()!.employeeName }}</span>
+            </div>
+          </div>
+          <button class="modal-close-btn" (click)="closeJustification()">✕</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="alert-box-warning">
+            <span class="alert-box-icon">⚠️</span>
+            <div>
+              <strong>Auditoria Trabalhista: Excesso de Jornada Legal (>10h)</strong>
+              <p>Ocorrência registrada e submetida à conformidade legal trabalhista (Portaria 671 do MTE e Art. 59 da CLT).</p>
+            </div>
+          </div>
+
+          <div class="modal-details-grid">
+            <div class="detail-item">
+              <span class="detail-label">Colaborador</span>
+              <span class="detail-val">{{ selectedJustification()!.employeeName }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Data da Ocorrência</span>
+              <span class="detail-val">{{ selectedJustification()!.dateFormatted }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Horário Local / UTC</span>
+              <span class="detail-val highlight-val">{{ selectedJustification()!.localTime }} ({{ selectedJustification()!.utcTime | date:'HH:mm' }} UTC)</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Fuso Horário de Origem</span>
+              <span class="detail-val">{{ selectedJustification()!.timezoneId }}</span>
+            </div>
+          </div>
+
+          <div class="justification-content-box">
+            <span class="box-title">📄 Justificativa Formal Registrada:</span>
+            <p class="justification-text">{{ selectedJustification()!.justification }}</p>
+          </div>
+
+          <div class="compliance-footer-note">
+            <span>🛡️ Integridade assegurada pelo PostgreSQL Row-Level-Security e hash auditável.</span>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-modal-close" (click)="closeJustification()">Fechar Auditoria</button>
+        </div>
+      </div>
+    </div>
+  }
 </div>
