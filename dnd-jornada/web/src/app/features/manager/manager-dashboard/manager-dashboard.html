@@ -1,0 +1,214 @@
+<div class="dashboard-layout">
+  <header class="glass-panel">
+    <div class="header-content">
+      <div class="brand">⏱️ D&D Jornada</div>
+      <div class="user-area">
+        <div class="user-info">
+          <span class="user-name">{{ profile()?.full_name }}</span>
+          <span class="user-badge badge-manager">Gestor</span>
+        </div>
+        <button class="btn-logout" (click)="logout()">Sair</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="page-title">
+      <h1>👥 Painel de Gestão de Equipe</h1>
+      <p>Acompanhamento analítico da jornada, horas extras e fusos internacionais dos seus liderados.</p>
+    </div>
+
+    <!-- KPIs de Equipe -->
+    <div class="kpi-grid">
+      <div class="kpi-card glass-panel animate-fade-in">
+        <span class="kpi-icon">👥</span>
+        <div class="kpi-info">
+          <span class="kpi-label">Equipe Sob Gestão</span>
+          <strong class="kpi-value">{{ team().length }} colaboradores</strong>
+        </div>
+      </div>
+
+      <div class="kpi-card glass-panel animate-fade-in" style="animation-delay: 0.1s;">
+        <span class="kpi-icon">⏱️</span>
+        <div class="kpi-info">
+          <span class="kpi-label">Horas Totais da Semana</span>
+          <strong class="kpi-value">{{ formatHours(totalTeamHours()) }}</strong>
+        </div>
+      </div>
+
+      <div class="kpi-card glass-panel animate-fade-in" style="animation-delay: 0.2s;" [class.kpi-alert]="overtimeAlertsCount() > 0">
+        <span class="kpi-icon">⚠️</span>
+        <div class="kpi-info">
+          <span class="kpi-label">Alertas de Sobrecarga (>10h)</span>
+          <strong class="kpi-value" [class.text-alert]="overtimeAlertsCount() > 0">{{ overtimeAlertsCount() }}</strong>
+        </div>
+      </div>
+
+      <div class="kpi-card glass-panel animate-fade-in" style="animation-delay: 0.3s;" [class.kpi-globe]="internationalCount() > 0">
+        <span class="kpi-icon">✈️</span>
+        <div class="kpi-info">
+          <span class="kpi-label">Pontos Internacionais</span>
+          <strong class="kpi-value">{{ internationalCount() }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de Ferramentas e Filtros -->
+    <div class="toolbar-panel glass-panel">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          placeholder="Buscar colaborador por nome ou e-mail..."
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)" />
+      </div>
+
+      <div class="filter-pills">
+        <button
+          class="pill-btn"
+          [class.pill-active]="filterStatus() === 'ALL'"
+          (click)="filterStatus.set('ALL')">
+          Todos ({{ team().length }})
+        </button>
+        <button
+          class="pill-btn"
+          [class.pill-active]="filterStatus() === 'ALERTS'"
+          (click)="filterStatus.set('ALERTS')">
+          ⚠️ Com Alertas ({{ overtimeAlertsCount() }})
+        </button>
+        <button
+          class="pill-btn"
+          [class.pill-active]="filterStatus() === 'INTL'"
+          (click)="filterStatus.set('INTL')">
+          ✈️ Internacionais ({{ internationalCount() }})
+        </button>
+      </div>
+
+      <div class="view-actions">
+        <button class="btn-text" (click)="expandAll()">Expandir Todos</button>
+        <span class="divider">|</span>
+        <button class="btn-text" (click)="collapseAll()">Recolher Todos</button>
+      </div>
+    </div>
+
+    <!-- Navegação Semanal -->
+    <div class="week-nav-container glass-panel">
+      <button class="nav-btn" (click)="previousWeek()">◀ Semana Anterior</button>
+      <span class="week-range">📅 Semana de Referência: {{ weekLabel() }}</span>
+      <button class="nav-btn" (click)="nextWeek()">Semana Seguinte ▶</button>
+    </div>
+
+    @if (loading()) {
+      <div class="loading-state">
+        <span class="spinner"></span> Carregando informações da equipe...
+      </div>
+    }
+
+    @if (!loading() && filteredTeam().length === 0) {
+      <div class="empty-state glass-panel">
+        <span class="empty-icon">📭</span>
+        <p>Nenhum colaborador encontrado para os filtros selecionados.</p>
+      </div>
+    }
+
+    <!-- Membros da Equipe (Cards Accordion Otimizados) -->
+    <div class="team-cards-list">
+      @for (member of filteredTeam(); track member.profile.id) {
+        <div class="member-card glass-panel animate-fade-in" [class.card-has-alert]="member.hasOvertimeAlert">
+          <!-- Cabeçalho Clicável do Colaborador -->
+          <div class="member-header" (click)="toggleExpand(member.profile.id)">
+            <div class="member-main-info">
+              <span class="member-avatar">{{ member.profile.full_name.charAt(0) }}</span>
+              <div>
+                <div class="member-name-row">
+                  <strong>{{ member.profile.full_name }}</strong>
+                  <span class="badge-location">{{ member.baseLocation }}</span>
+                </div>
+                <span class="member-email">{{ member.profile.email || 'colaborador@dndgroup.com' }}</span>
+              </div>
+            </div>
+
+            <div class="member-status-badges">
+              @if (member.hasOvertimeAlert) {
+                <span class="badge-alert">⚠️ Alerta: >10h Diárias</span>
+              }
+              @if (member.hasInternationalTz) {
+                <span class="badge-intl">✈️ Fuso Internacional</span>
+              }
+              @if (!member.hasOvertimeAlert && !member.hasInternationalTz) {
+                <span class="badge-regular">✓ Jornada Regular</span>
+              }
+
+              <div class="member-total">
+                <span class="total-label">Total na semana</span>
+                <span class="total-value">{{ formatHours(member.totalHours) }}</span>
+              </div>
+
+              <button class="btn-toggle-icon" [title]="expandedMembers().has(member.profile.id) ? 'Recolher detalhes' : 'Expandir detalhes'">
+                {{ expandedMembers().has(member.profile.id) ? '▲' : '▼' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Tabela Semanal (Exibida quando expandido) -->
+          @if (expandedMembers().has(member.profile.id)) {
+            <div class="member-table-container animate-fade-in">
+              <table class="member-table">
+                <thead>
+                  <tr>
+                    <th>Dia</th>
+                    <th>Data</th>
+                    <th>Entrada</th>
+                    <th>Pausa</th>
+                    <th>Retorno</th>
+                    <th>Saída</th>
+                    <th>Total</th>
+                    <th>Fuso Horário de Registro</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (day of member.days; track day.dateFormatted) {
+                    <tr [class.row-alert]="day.isOvertime10h">
+                      <td class="day-name">{{ day.dayName }}</td>
+                      <td>{{ day.dateFormatted }}</td>
+                      <td>{{ day.clockIn }}</td>
+                      <td>{{ day.breakStart }}</td>
+                      <td>{{ day.breakEnd }}</td>
+                      <td>{{ day.clockOut }}</td>
+                      <td class="total-cell">
+                        {{ day.totalHours }}
+                        @if (day.isOvertime10h) {
+                          <span class="badge-pill-alert" title="Limite diário de 10h excedido">⚠️ >10h</span>
+                        }
+                      </td>
+                      <td>
+                        @if (day.timezoneId) {
+                          <span class="badge-tz" [title]="'Fuso: ' + day.timezoneId">
+                            @if (day.timezoneId.includes('Lisbon')) {
+                              🇵🇹 Lisboa (UTC+1)
+                            } @else if (day.timezoneId.includes('Madrid')) {
+                              🇪🇸 Madri (UTC+2)
+                            } @else {
+                              🇧🇷 São Paulo (UTC-3)
+                            }
+                          </span>
+                        }
+                        @if (day.isManualAdjustment) {
+                          <span class="badge-manual" [title]="day.justification || 'Ajuste Manual'">📝 Justificado</span>
+                        }
+                        @if (!day.timezoneId && !day.isManualAdjustment) {
+                          —
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </main>
+</div>
