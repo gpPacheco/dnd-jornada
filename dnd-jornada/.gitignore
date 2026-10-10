@@ -1,0 +1,36 @@
+# Database & Backend (Segurança para repositório público)
+supabase/
+create_users.js
+web/create_users.js
+check_profiles.js
+seed_october_data.js
+*.env
+*.env.*
+web/src/environments/environment.ts
+web/src/environments/environment.prod.ts
+scripts/
+
+# Dependências
+node_modules/
+web/node_modules/
+
+# Builds de produção
+dist/
+web/dist/
+tmp/
+out-tsc/
+
+# Cache Angular
+.angular/
+web/.angular/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE & SO
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
