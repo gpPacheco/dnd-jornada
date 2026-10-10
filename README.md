@@ -57,7 +57,7 @@ Se quiser rodar o projeto na sua máquina de desenvolvimento:
 ### 1. Clonar e entrar na pasta do frontend
 ```bash
 git clone https://github.com/gppacheco/dnd-jornada.git
-cd dnd-jornada/dnd-jornada/web
+cd dnd-jornada/dnd-jornada/web  # ou acesse a pasta web do projeto
 ```
 
 ### 2. Instalar as dependências
