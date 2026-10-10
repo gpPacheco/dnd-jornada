@@ -7,8 +7,6 @@ create_users.js
 **/seed_october_data.js
 *.env
 *.env.*
-**/environment.ts
-**/environment.prod.ts
 scripts/
 **/scripts/
 

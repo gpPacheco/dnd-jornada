@@ -6,8 +6,6 @@ check_profiles.js
 seed_october_data.js
 *.env
 *.env.*
-web/src/environments/environment.ts
-web/src/environments/environment.prod.ts
 scripts/
 
 # Dependências
