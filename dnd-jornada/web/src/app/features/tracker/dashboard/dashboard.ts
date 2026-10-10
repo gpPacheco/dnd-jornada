@@ -80,6 +80,39 @@ export class Dashboard implements OnInit, OnDestroy {
     return `${fmt(start)} — ${fmt(end)}`;
   });
 
+  // Detecção de Inconsistência de Jornada (Batida ímpar ou dia anterior sem encerramento)
+  pendingInconsistency = computed(() => {
+    const entries = this.weekEntries();
+    const today = new Date();
+    const days = new Map<string, TimeEntry[]>();
+
+    for (const e of entries) {
+      const d = new Date(e.timestamp_utc);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if (!days.has(key)) days.set(key, []);
+      days.get(key)!.push(e);
+    }
+
+    for (const [dayKey, dayEntries] of days.entries()) {
+      const [y, m, d] = dayKey.split('-').map(Number);
+      const dateObj = new Date(y, m - 1, d);
+      const isToday = dateObj.getDate() === today.getDate() && dateObj.getMonth() === today.getMonth() && dateObj.getFullYear() === today.getFullYear();
+
+      if (!isToday && dayEntries.length > 0) {
+        const hasClockIn = dayEntries.some(e => e.event_type === 'CLOCK_IN');
+        const hasClockOut = dayEntries.some(e => e.event_type === 'CLOCK_OUT');
+        if (hasClockIn && !hasClockOut) {
+          const fmt = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}`;
+          return {
+            hasError: true,
+            message: `Inconsistência identificada no dia ${fmt}: encerramento (saída) não registrado. Regularize com seu gestor.`
+          };
+        }
+      }
+    }
+    return { hasError: false, message: '' };
+  });
+
   isCurrentWeek = computed(() => {
     const currentMonday = this.getMonday(new Date());
     return this.selectedWeekStart().getTime() === currentMonday.getTime();
@@ -241,7 +274,13 @@ export class Dashboard implements OnInit, OnDestroy {
         'BREAK_END': 'Bem-vindo de volta!',
         'CLOCK_OUT': 'Jornada encerrada. Até amanhã!'
       };
-      this.showToast(labels[next.type] || 'Registrado!', 'success');
+
+      const baseLabel = labels[next.type] || 'Registrado!';
+      if (this.geoStatus() === 'granted') {
+        this.showToast(`${baseLabel} 📍 GPS validado com precisão.`, 'success');
+      } else {
+        this.showToast(`${baseLabel} ⚠️ Localização GPS não verificada (permissão ausente).`, 'warning');
+      }
 
       await this.loadTodayEntries();
       await this.loadWeekEntries();
