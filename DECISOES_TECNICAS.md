@@ -62,22 +62,4 @@ Para comprovar a presença física do colaborador, utilizei a API de geolocaliza
 - Fusos horários unificados em UTC: Todas as batidas são gravadas no banco de dados na hora universal (UTC). Isso significa que o cálculo de tempo trabalhado é uma conta exata de milissegundos, imune a viagens ou horários de verão. Na tela, o colaborador vê as horas convertidas perfeitamente para o horário local da sua cidade (São Paulo, Lisboa ou Madri).
 - Fechamento mensal pelo RH: Ao final do mês, o RH pode fechar o período no sistema. As batidas daquele mês ficam congeladas contra alterações, garantindo que os dados enviados para a folha de pagamento sejam confiáveis e definitivos.
 
----
 
-## Como Baixar e Testar no Celular
-
-O aplicativo pode ser testado no celular de maneira muito simples:
-1. Pelo arquivo APK: Basta acessar o endereço do projeto pelo navegador do próprio smartphone Android, baixar o arquivo instalador `.apk` e confirmar a instalação no aparelho.
-2. Pelo próprio navegador (PWA): Acesse `https://dnd-jornada.vercel.app` pelo navegador do celular, clique em "Adicionar à tela de início" e utilize o sistema em tela cheia com acesso ao GPS como se fosse um aplicativo da loja.
-
----
-
-## Usuários Disponíveis para Testes
-
-Todas as contas utilizam a mesma senha: `password123`.
-
-- Colaborador Brasil (São Paulo): `colaborador@dndgroup.com`
-- Colaboradora Lisboa (Portugal): `colaborador2@dndgroup.com`
-- Colaborador Madri (Espanha): `colaborador3@dndgroup.com`
-- Gestor da Equipe: `gestor@dndgroup.com`
-- Recursos Humanos / Administrador: `rh@dndgroup.com`

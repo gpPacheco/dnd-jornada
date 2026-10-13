@@ -49,17 +49,15 @@ O aplicativo foi desenhado para funcionar com a mesma facilidade na tela do celu
 
 ---
 
-## Contas de Teste
+## Usuários Disponíveis para Testes
 
-O banco de dados já possui usuários cadastrados para testar cada cenário e fuso horário. Todas as contas utilizam a mesma senha: `password123`.
+Todas as contas utilizam a mesma senha: `password123`.
 
-| Perfil | E-mail | Senha | Cenário de Teste |
-| :--- | :--- | :--- | :--- |
-| Colaborador Brasil (João) | `colaborador@dndgroup.com` | `password123` | Bate ponto no fuso de São Paulo (UTC-3), acompanha suas horas e pausas. |
-| Colaboradora Lisboa (Maria) | `colaborador2@dndgroup.com` | `password123` | Conta individual em Lisboa (UTC+1) com conversão automática de horário. |
-| Colaborador Madri (Carlos) | `colaborador3@dndgroup.com` | `password123` | Conta individual em Madri (UTC+2) com jornada de mais de 10 horas e justificativa visível. |
-| Gestor (Silva) | `gestor@dndgroup.com` | `password123` | Acompanha a equipe, alertas de excesso de jornada e ocorrências. |
-| RH / Administrador | `rh@dndgroup.com` | `password123` | Auditoria geral de todas as batidas e fechamento mensal da folha. |
+- Colaborador Brasil (São Paulo): `colaborador@dndgroup.com`
+- Colaboradora Lisboa (Portugal): `colaborador2@dndgroup.com`
+- Colaborador Madri (Espanha): `colaborador3@dndgroup.com`
+- Gestor da Equipe: `gestor@dndgroup.com`
+- Recursos Humanos / Administrador: `rh@dndgroup.com`
 
 ---
 
@@ -67,8 +65,7 @@ O banco de dados já possui usuários cadastrados para testar cada cenário e fu
 
 Para testar no celular, você pode escolher o caminho que achar mais prático:
 
-1. Baixar e instalar o APK: Acesse o link do projeto pelo próprio navegador do celular, baixe o arquivo `.apk` e confirme a instalação no Android.
-2. Usar direto pelo navegador (PWA): Abra o link `https://dnd-jornada.vercel.app` no navegador do celular (Chrome ou Safari) e toque em "Adicionar à tela de início". O sistema funcionará como um aplicativo comum, em tela cheia e com acesso ao GPS.
+1. Usar direto pelo navegador (PWA): Abra o link `https://dnd-jornada.vercel.app` no navegador do celular (Chrome ou Safari) e toque em "Adicionar à tela de início". O sistema funcionará como um aplicativo comum, em tela cheia e com acesso ao GPS.
 
 ---
 
