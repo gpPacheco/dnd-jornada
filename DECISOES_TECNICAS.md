@@ -1,118 +1,83 @@
-# Decisoes Tecnicas, Regras de Negocio e Arquitetura
+# Decisões Técnicas e Regras de Negócio
 
-Este documento descreve as escolhas tecnicas, os requisitos e as regras de negocio que adotei na construcao do sistema. Como desenvolvi este projeto de forma individual, fui o responsavel por todas as etapas: desde a concepcao da arquitetura e modelagem do banco ate a construcao da interface, integracao de sensores e cumprimento das normas trabalhistas.
+Desenvolvi este projeto de forma totalmente individual, sendo o único responsável por pensar a arquitetura, desenhar o banco de dados, implementar a segurança, construir as telas e aplicar as regras da legislação trabalhista. 
 
----
-
-## 1. Contexto do Projeto
-
-O objetivo foi criar uma solucao robusta e intuitiva de controle de ponto para uma empresa com operacoes simultaneas no Brasil, em Portugal e na Espanha. O foco principal foi unir conformidade legal estrita (CLT), precisao matematica no calculo de horas trabalhadas em diferentes fusos e uma experiencia de uso simples para os colaboradores no dia a dia.
+Este documento foi escrito de forma simples e direta para que qualquer pessoa, técnica ou não, consiga entender com clareza o motivo de cada escolha que fiz.
 
 ---
 
-## 2. Requisitos do Sistema
+## O Desafio e as Necessidades do Sistema
 
-### 2.1. Requisitos Funcionais (RF)
+O objetivo principal era construir um sistema de controle de ponto moderno para uma empresa com funcionários trabalhando no Brasil, em Portugal e na Espanha. 
 
-- RF01 - Autenticacao com controle de perfis: Acesso individualizado para Colaborador, Gestor e RH, com contas exclusivas para cada usuario.
-- RF02 - Registro sequencial de ponto: Fluxo guiado em ordem logica (Entrada, Inicio de Intervalo, Retorno de Intervalo e Encerramento da Jornada).
-- RF03 - Captura de geolocalizacao: Registro das coordenadas geograficas com precisao real no momento exato de cada batida.
-- RF04 - Gestao de fusos horarios: Suporte nativo aos fusos de Sao Paulo (UTC-3), Lisboa (UTC+1) e Madri (UTC+2), com conversao automatica na interface.
-- RF05 - Controle do limite de 10 horas diarias: Bloqueio de novas pausas ao atingir o limite legal da CLT e exigencia de justificativa para jornadas que ultrapassem essa marca.
-- RF06 - Identificacao de inconsistencias (Batida Impar): Alerta visual imediato caso o colaborador nao tenha registrado a saida no dia anterior.
-- RF07 - Painel do Gestor: Visualizacao consolidada da equipe, monitoramento de ocorrencias e auditoria de jornadas acima de 10 horas.
-- RF08 - Painel do RH: Relatorio geral de auditoria e acao de fechamento mensal de folha.
+Para que o projeto atendesse a realidade do negócio de forma eficiente, defini os seguintes pontos essenciais:
 
-### 2.2. Requisitos Nao-Funcionais (RNF)
-
-- RNF01 - Seguranca e isolamento de dados: Politicas de Row Level Security (RLS) aplicadas diretamente no banco para garantir que colaboradores so acessem seus proprios dados.
-- RNF02 - Precisao geografica: Calibracao ativa do sensor de GPS com alvo de precisao real de ate 20 metros e descarte de coordenadas nulas ou falsas.
-- RNF03 - Responsividade e suporte a dispositivos moveis: Interface pensada para uso fluido em smartphones (PWA ou APK) e em navegadores desktop.
-- RNF04 - Desempenho e reatividade: Uso do Angular 19 com Signals para atualizacao instantanea de contadores e regras de interface sem renderizacoes desnecessarias.
-- RNF05 - Imutabilidade historica: Periodos mensais fechados pelo RH tornam-se somente leitura, impedindo alteracoes posteriores.
+- Acesso individualizado: Telas e permissões separadas para colaboradores, gestores e profissionais de recursos humanos.
+- Registro fácil e à prova de erros: O colaborador é guiado por um fluxo natural (Entrada, Pausa, Retorno e Saída) sem chance de errar a ordem das batidas.
+- Presença com localização real: Registro da posição geográfica do colaborador no momento do ponto com alta precisão e sem coordenadas falsas.
+- Fusos horários exatos: Tratamento matemático dos horários de São Paulo, Lisboa e Madri, garantindo que o total de horas trabalhadas seja sempre justo e correto.
+- Cumprimento da lei trabalhista: Controle rigoroso do limite de 10 horas diárias da CLT, alerta de esquecimento de saída no dia anterior e fechamento seguro do mês pelo RH.
+- Praticidade no uso diário: O sistema funciona com a mesma agilidade no celular ou no computador, carregando rápido e com visual agradável.
 
 ---
 
-## 3. Por que escolhi o Supabase?
+## Por que Decidi Usar o Supabase
 
-Por estar desenvolvendo o projeto sozinho e dentro do prazo de um desafio tecnico, precisei tomar decisoes que aliassem qualidade de engenharia e velocidade de entrega. Escolhi o Supabase como intermediador de backend (BaaS) pelos seguintes motivos:
+Por estar desenvolvendo o projeto sozinho e com o prazo curto de um desafio técnico, minha prioridade foi aliar velocidade de entrega com confiabilidade de engenharia. Em vez de perder dias montando um servidor do zero, cuidando de rotas manuais e configurando banco de dados básico, escolhi o Supabase como intermediador de backend por três motivos claros:
 
-- Agilidade na modelagem e persistencia: O Supabase fornece um banco relacional PostgreSQL completo. Isso me permitiu estruturar schemas limpos, tipos consistentes e relacoes fortes em pouco tempo.
-- Autenticacao confiavel e segura: O sistema de autenticacao nativo do Supabase gera tokens JWT seguros, faz hash de senhas com bcrypt e gerencia sessoes automaticamente, eliminando o risco de falhas comuns em implementacoes manuais de login.
-- Intermediacao de backend e processamento de regras: Em vez de manter um servidor intermediario apenas para repassar chamadas ao banco, o Supabase atua diretamente na intermediacao, aplicando validacoes de dados e garantindo alta performance com conexoes gerenciadas.
-
----
-
-## 4. Por que nao enviei arquivos do banco para o repositorio?
-
-Mesmo se tratando de um desafio tecnico, optei por tratar a seguranca do projeto com os mesmos padroes de um ambiente produtivo real. Por isso, nao inclui scripts internos do banco, schemas ou a pasta do Supabase no repositorio publico do GitHub:
-
-- Protecao da arquitetura interna: Evitar a exposicao publica da estrutura das tabelas, funcoes e configuracoes internas reduz a superficie de ataque contra o projeto.
-- Seguranca reforcada com RLS (Row Level Security): Todas as tabelas do banco possuem politicas ativas de RLS no PostgreSQL. Isso significa que, mesmo que a chave publica do frontend seja conhecida, o banco de dados autoriza unicamente as acoes permitidas para o usuario logado (verificado pelo token JWT). Um colaborador jamais consegue consultar ou manipular registros de outro colaborador.
-- Testes de seguranca automatizados: Executei testes automatizados nas rotas e politicas de acesso para validar que tentativas de requisicoes nao autorizadas retornem erro e que dados confidenciais fiquem blindados.
+1. Agilidade para estruturar o banco: O Supabase oferece um banco de dados relacional PostgreSQL completo. Consegui modelar as tabelas e relações de forma limpa, garantindo a persistência segura dos dados em tempo recorde.
+2. Autenticação pronta e segura: O sistema de login já utiliza padrões consagrados de mercado, como criptografia de senhas com bcrypt e tokens seguros de sessão (JWT). Isso elimina vulnerabilidades comuns de sistemas de login feitos às pressas.
+3. Intermediação de dados e regras de acesso: O Supabase atua diretamente no tratamento de dados e na aplicação das regras de segurança com alto desempenho, sem a necessidade de manter uma camada intermediária pesada.
 
 ---
 
-## 5. API de Localizacao e Calibracao de Precisao (Alvo de ate 20 Metros)
+## Por que Não Enviei Nada do Banco para o Repositório
 
-Para comprovar a presenca fisica do colaborador no momento do ponto, utilizei a Geolocation API nativa do navegador (`navigator.geolocation`):
+O repositório do projeto no GitHub é público. Mesmo se tratando de um desafio técnico para avaliação, adotei uma postura séria de segurança desde o primeiro momento:
 
-### Descarte de Coordenadas Nulas e Falsas (Null Island)
-Navegadores em computadores ou em celulares com GPS recem-aberto costumam retornar coordenadas aproximadas por IP ou respostas nulas `(0.0000, 0.0000)`, que apontam para o Oceano Atlantico (Golfo da Guine). Criei uma funcao de sanitizacao (`isOceanCoordinate`) que identifica e descarta imediatamente essas coordenadas maritimas, forcando o sensor a buscar a posicao terrestre real.
-
-### Calibracao Continua com Alvo de ate 20 Metros
-Em vez de depender de uma leitura unica instantanea (que frequentemente traz erro superior a centenas de metros), implementei a leitura via `watchPosition` com `enableHighAccuracy: true`. O sistema acompanha a sintonizacao dos satelites em tempo real ate que a margem de erro atinja a meta de ate 20 metros (`accuracy <= 20`).
-
-### Auditoria no Google Maps
-O painel gera dinamicamente um link direto para o Google Maps a partir das coordenadas coletadas, permitindo que colaborador e gestor confiram a exatidao da rua e do local registrado.
-
-![Calibracao de Geolocalizacao e Link do Google Maps](./docs/screenshots/desktop_geolocalizacao_calibracao.png)
-
-### Resguardo Legal (Caso o GPS esteja desligado)
-Se o colaborador estiver em um dispositivo sem suporte a GPS ou optar por nao fornecer a permissao, o sistema nao impede o registro do ponto. Legalmente, a empresa nao pode inviabilizar o registro da jornada cumprida pelo empregado. No entanto, o sistema grava a ocorrencia como "Localizacao Nao Verificada", alertando imediatamente o gestor e o RH no painel para averiguação interna.
+- Proteção da estrutura interna: Decidi não subir nenhum arquivo interno do Supabase, scripts de migração ou esquemas do banco para não expor a arquitetura do projeto publicamente na internet.
+- Segurança garantida no próprio banco com RLS: Ativei a proteção de Row Level Security (segurança em nível de linha) em todas as tabelas no PostgreSQL. Isso significa que é o próprio banco de dados que valida quem está fazendo a requisição. Um colaborador só consegue ver e registrar seus próprios pontos, mesmo que alguém tenha acesso à chave pública da aplicação.
+- Testes automatizados: Executei testes automáticos para confirmar que as permissões funcionam perfeitamente e que nenhuma conta consegue visualizar ou modificar dados de outros colaboradores.
 
 ---
 
-## 6. Regras de Negocio Trabalhistas e Operacionais
+## Como Funciona a Localização e o GPS
 
-### 6.1. Botao Unico de Acao (Prevecao de Erro Operacional)
-A interface apresenta sempre um unico botao de acao em destaque, exibindo apenas a etapa seguinte da jornada (Entrada -> Pausa -> Retorno -> Saida). Isso elimina duplos cliques acidentais e impede que o colaborador bata pausas ou saidas fora da sequencia cronologica correta.
+Para comprovar a presença física do colaborador, utilizei a API de geolocalização nativa do navegador (`navigator.geolocation`). Ajustei o funcionamento para resolver problemas comuns do dia a dia:
 
-### 6.2. Limite de 10 Horas Diarias (Artigo 59 da CLT)
-A legislacao trabalhista brasileira estabelece a jornada padrao de 8 horas e impoe o teto maximo de 10 horas diarias (jornada padrao mais 2 horas extras):
-- Ao atingir 10 horas de trabalho no dia, o painel bloqueia qualquer tentativa de novas pausas e exige o encerramento do expediente.
-- Caso ocorra uma jornada excepcional acima de 10 horas (como registrado no cenario de Madri), o sistema destaca a batida com alerta visual e disponibiliza um modal com a justificativa formal cadastrada para fins de auditoria do RH.
+- Eliminação de coordenadas no mar: Em muitos navegadores, a primeira resposta de localização pode retornar zerada `(0, 0)`, apontando para o meio do oceano. Criei uma validação no sistema que descarta essas posições nulas ou marítimas e continua buscando o sinal terrestre real.
+- Calibração de precisão até 20 metros: Em vez de capturar uma coordenada qualquer no primeiro segundo, o sistema mantém uma calibração ativa com os satélites de GPS até alcançar uma precisão real de até 20 metros de margem de erro.
+- Conferência no Google Maps: O painel cria um link direto para o Google Maps com as coordenadas exatas da batida, permitindo que tanto o colaborador quanto o gestor confiram a rua e o local do ponto com apenas um clique.
+- Resguardo da legislação: Se o colaborador estiver sem GPS ou recusar a permissão de localização, o sistema não trava a batida. Legalmente, a empresa não pode impedir o funcionário de registrar o trabalho que realizou. No entanto, o ponto é salvo com o aviso claro de "Localização Não Verificada", permitindo que o gestor e o RH façam a conferência administrativa necessária.
 
-### 6.3. Alerta de Batida Impar do Dia Anterior
-Se o colaborador encerrou o dia anterior sem registrar a batida de saida, o sistema detecta a inconsistencia e exibe um alerta de aviso no topo da tela, orientando-o a procurar o gestor para regularizar o espelho de ponto antes de acumular horas incorretas.
-
-### 6.4. Tratamento Universal de Fusos Horarios (UTC)
-Para atender colaboradores no Brasil (UTC-3), Portugal (UTC+1) e Espanha (UTC+2) sem risco de inconsistencias:
-- Todas as batidas sao persistidas no banco em UTC absoluto (tempo universal coordenado).
-- O calculo do total de horas trabalhadas e realizado em milissegundos reais entre os eventos, tornando o calculo matematicamente imune a mudancas de horario de verao ou viagens de trabalho.
-- A exibicao na tela converte o horario UTC para o fuso horario contratual configurado no perfil de cada colaborador.
-
-### 6.5. Fechamento Mensal pelo RH
-Ao final de cada mes contabil, o setor de RH pode acionar o fechamento do periodo. O mes recebe o status `CLOSED`, e as regras de RLS do banco de dados congelam as batidas contra qualquer alteracao ou exclusao retroativa, garantindo a integridade dos dados para envio a folha de pagamento.
+![Validação de Geolocalização e Google Maps](./docs/screenshots/desktop_geolocalizacao_calibracao.png)
 
 ---
 
-## 7. Como Baixar e Usar o APK no Celular
+## Regras de Negócio e Legislação Trabalhista
 
-Para testar o aplicativo diretamente no aparelho celular Android:
-1. Abra o navegador do smartphone (como o Google Chrome).
-2. Acesse o endereco do projeto ou o link direto disponibilizado para o download do arquivo `.apk`.
-3. Conclua o download do arquivo no celular e clique para instalar.
-4. Caso o Android solicite permissao para instalar aplicativos do navegador, autorize a instalacao e abra o aplicativo normalmente.
+- Um único botão de ação: Para evitar que o colaborador dê dois cliques seguidos ou aperte o botão errado, a tela sempre mostra apenas uma ação em destaque (a próxima ação lógica do dia).
+- Limite de 10 horas da CLT: O artigo 59 da CLT limita a jornada diária a no máximo 10 horas (8 horas normais mais 2 horas extras). Ao atingir 10 horas trabalhadas no dia, o sistema bloqueia novas pausas e exige o encerramento do expediente. Se por motivo de força maior a jornada ultrapassar esse limite, o ponto é destacado com alerta e exige a visualização de uma justificativa formal para auditoria.
+- Alerta de esquecimento no dia anterior: Se o funcionário foi embora no dia anterior sem registrar a batida de saída, o sistema percebe a pendência e exibe um aviso de atenção na tela para que a situação seja regularizada com o gestor.
+- Fusos horários unificados em UTC: Todas as batidas são gravadas no banco de dados na hora universal (UTC). Isso significa que o cálculo de tempo trabalhado é uma conta exata de milissegundos, imune a viagens ou horários de verão. Na tela, o colaborador vê as horas convertidas perfeitamente para o horário local da sua cidade (São Paulo, Lisboa ou Madri).
+- Fechamento mensal pelo RH: Ao final do mês, o RH pode fechar o período no sistema. As batidas daquele mês ficam congeladas contra alterações, garantindo que os dados enviados para a folha de pagamento sejam confiáveis e definitivos.
 
 ---
 
-## 8. Credenciais para Validacao dos Cenarios
+## Como Baixar e Testar no Celular
 
-Todas as contas utilizam a senha padrao `password123`.
+O aplicativo pode ser testado no celular de maneira muito simples:
+1. Pelo arquivo APK: Basta acessar o endereço do projeto pelo navegador do próprio smartphone Android, baixar o arquivo instalador `.apk` e confirmar a instalação no aparelho.
+2. Pelo próprio navegador (PWA): Acesse `https://dnd-jornada.vercel.app` pelo navegador do celular, clique em "Adicionar à tela de início" e utilize o sistema em tela cheia com acesso ao GPS como se fosse um aplicativo da loja.
 
-- Colaborador Brasil (Sao Paulo - UTC-3): `colaborador@dndgroup.com`
-- Colaboradora Lisboa (Portugal - UTC+1): `colaborador2@dndgroup.com`
-- Colaborador Madri (Espanha - UTC+2): `colaborador3@dndgroup.com`
+---
+
+## Usuários Disponíveis para Testes
+
+Todas as contas utilizam a mesma senha: `password123`.
+
+- Colaborador Brasil (São Paulo): `colaborador@dndgroup.com`
+- Colaboradora Lisboa (Portugal): `colaborador2@dndgroup.com`
+- Colaborador Madri (Espanha): `colaborador3@dndgroup.com`
 - Gestor da Equipe: `gestor@dndgroup.com`
-- RH / Administrador: `rh@dndgroup.com`
+- Recursos Humanos / Administrador: `rh@dndgroup.com`

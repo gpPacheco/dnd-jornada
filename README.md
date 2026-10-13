@@ -1,123 +1,108 @@
 # D&D Jornada - Controle de Ponto Inteligente
 
-Sistema de controle de ponto eletronico desenvolvido para empresas com equipes distribuidas entre o Brasil e a Europa (Portugal e Espanha). Desenvolvi este projeto de forma individual, cuidando de toda a arquitetura de dados, seguranca, regras trabalhistas da CLT e interface tanto para celular quanto para computador.
+Desenvolvi este sistema de controle de ponto eletrônico pensando na realidade de empresas com equipes distribuídas entre o Brasil e a Europa (Portugal e Espanha). O projeto foi feito inteiramente por mim, com o objetivo de entregar uma experiência simples no dia a dia, respeitar as regras da CLT e resolver de forma transparente a diferença de fusos horários.
 
 ---
 
-## Acesso Online (Deploy na Vercel)
+## Acesso Online
 
-A aplicacao esta publicada e pode ser testada diretamente pelo navegador:
+A aplicação está disponível na internet e pode ser testada diretamente pelo navegador:
 
-[Acesse a Aplicacao na Vercel](https://dnd-jornada.vercel.app)
-
----
-
-## Demonstracao Visual
-
-### Versao Desktop (Painel do Colaborador, Gestor e RH)
-
-Telas da aplicacao em uso no computador:
-
-#### Tela de Login
-![Tela de Login Desktop](./docs/screenshots/desktop_login.png)
-
-#### Painel Principal - Inicio de Intervalo
-![Inicio de Intervalo Desktop](./docs/screenshots/desktop_iniciar_pausa.png)
-
-#### Painel Principal - Encerramento de Jornada
-![Encerramento de Jornada Desktop](./docs/screenshots/desktop_encerrar_jornada.png)
-
-#### Quadro Semanal e Regras do Expediente
-![Quadro Semanal Desktop](./docs/screenshots/desktop_quadro_semanal.png)
-
-#### Calibracao de Geolocalizacao em Tempo Real e Link para o Google Maps
-![Calibracao de Geolocalizacao Desktop](./docs/screenshots/desktop_geolocalizacao_calibracao.png)
+[Acessar a Aplicação na Vercel](https://dnd-jornada.vercel.app)
 
 ---
 
-### Versao Mobile (Aplicativo para Celular)
+## Telas do Sistema
 
-Telas da aplicacao em uso no smartphone:
+### Versão para Computador (Desktop)
 
-| Tela de Login | Inicio de Jornada | Inicio de Pausa |
+O painel no computador oferece uma visão ampla e limpa para colaboradores, gestores e RH.
+
+Tela de login corporativo:
+![Login no Computador](./docs/screenshots/desktop_login.png)
+
+Registro de ponto e acompanhamento das horas trabalhadas:
+![Início de Intervalo](./docs/screenshots/desktop_iniciar_pausa.png)
+
+Encerramento da jornada diária:
+![Encerramento de Jornada](./docs/screenshots/desktop_encerrar_jornada.png)
+
+Quadro semanal e regras de expediente:
+![Quadro Semanal](./docs/screenshots/desktop_quadro_semanal.png)
+
+Validação de geolocalização com precisão real e conferência no Google Maps:
+![Validação de Geolocalização](./docs/screenshots/desktop_geolocalizacao_calibracao.png)
+
+---
+
+### Versão para Celular (Mobile)
+
+O aplicativo foi desenhado para funcionar com a mesma facilidade na tela do celular:
+
+| Login | Início de Jornada | Início de Pausa |
 | :---: | :---: | :---: |
-| ![Login Mobile](./docs/screenshots/mobile_login.jpg) | ![Iniciar Jornada](./docs/screenshots/mobile_iniciar_jornada.jpg) | ![Iniciar Pausa](./docs/screenshots/mobile_pausa.jpg) |
+| ![Login no Celular](./docs/screenshots/mobile_login.jpg) | ![Início de Jornada](./docs/screenshots/mobile_iniciar_jornada.jpg) | ![Início de Pausa](./docs/screenshots/mobile_pausa.jpg) |
 
 | Quadro Semanal de Pontos | Encerramento de Jornada |
 | :---: | :---: |
-| ![Quadro Semanal](./docs/screenshots/mobile_quadro_semanal.jpg) | ![Encerrar Jornada](./docs/screenshots/mobile_encerrar_jornada.jpg) |
+| ![Quadro Semanal no Celular](./docs/screenshots/mobile_quadro_semanal.jpg) | ![Encerramento de Jornada](./docs/screenshots/mobile_encerrar_jornada.jpg) |
 
 ---
 
-## Contas de Acesso para Testes
+## Contas de Teste
 
-O banco de dados ja esta populado com contas configuradas para testar todos os perfis e fusos horarios. Todas as contas utilizam a mesma senha: `password123`.
+O banco de dados já possui usuários cadastrados para testar cada cenário e fuso horário. Todas as contas utilizam a mesma senha: `password123`.
 
 | Perfil | E-mail | Senha | Cenário de Teste |
 | :--- | :--- | :--- | :--- |
-| Colaborador Brasil (Joao) | `colaborador@dndgroup.com` | `password123` | Bater ponto no fuso de Sao Paulo (UTC-3), ver horas trabalhadas e regras de intervalo. |
-| Colaboradora Lisboa (Maria) | `colaborador2@dndgroup.com` | `password123` | Conta individual da colaboradora em Lisboa (UTC+1) com conversao automatica de horario. |
-| Colaborador Madri (Carlos) | `colaborador3@dndgroup.com` | `password123` | Conta individual em Madri (UTC+2) com jornada superior a 10h e justificativa visivel. |
-| Gestor (Silva) | `gestor@dndgroup.com` | `password123` | Visao consolidada da equipe, alertas de horas excedentes (>10h) e ocorrencias de ponto. |
-| RH / Administrador | `rh@dndgroup.com` | `password123` | Auditoria geral de todas as batidas, relatorios e acao de fechamento mensal de folha. |
+| Colaborador Brasil (João) | `colaborador@dndgroup.com` | `password123` | Bate ponto no fuso de São Paulo (UTC-3), acompanha suas horas e pausas. |
+| Colaboradora Lisboa (Maria) | `colaborador2@dndgroup.com` | `password123` | Conta individual em Lisboa (UTC+1) com conversão automática de horário. |
+| Colaborador Madri (Carlos) | `colaborador3@dndgroup.com` | `password123` | Conta individual em Madri (UTC+2) com jornada de mais de 10 horas e justificativa visível. |
+| Gestor (Silva) | `gestor@dndgroup.com` | `password123` | Acompanha a equipe, alertas de excesso de jornada e ocorrências. |
+| RH / Administrador | `rh@dndgroup.com` | `password123` | Auditoria geral de todas as batidas e fechamento mensal da folha. |
 
 ---
 
-## Decisoes Tecnicas e Regras de Negocio
+## Como Usar no Celular
 
-Para detalhes completos sobre por que usei o Supabase, por que nao subi arquivos do banco por seguranca, requisitos funcionais e nao-funcionais, integracao do GPS e regras da CLT:
+Para testar no celular, você pode escolher o caminho que achar mais prático:
 
-[Consulte o documento completo: DECISOES_TECNICAS.md](DECISOES_TECNICAS.md)
-
----
-
-## Como Acessar e Usar no Celular
-
-Para testar a experiencia mobile, existem duas formas diretas:
-
-### 1. Baixar e instalar o APK diretamente
-Voce pode acessar o link do projeto pelo proprio navegador do celular, baixar o arquivo `.apk` gerado pelo projeto e confirmar a instalacao para rodar nativamente no Android.
-
-### 2. Acesso direto pelo navegador do celular (PWA)
-1. Abra o link do projeto (`https://dnd-jornada.vercel.app`) no navegador do celular (Chrome ou Safari).
-2. Toque no menu do navegador e selecione "Adicionar a tela de inicio".
-3. O icone do aplicativo ficara salvo na tela do seu aparelho e abrira em tela cheia, com acesso completo ao GPS e fluidez de um aplicativo nativo.
+1. Baixar e instalar o APK: Acesse o link do projeto pelo próprio navegador do celular, baixe o arquivo `.apk` e confirme a instalação no Android.
+2. Usar direto pelo navegador (PWA): Abra o link `https://dnd-jornada.vercel.app` no navegador do celular (Chrome ou Safari) e toque em "Adicionar à tela de início". O sistema funcionará como um aplicativo comum, em tela cheia e com acesso ao GPS.
 
 ---
 
-## Como Rodar o Projeto Localmente
+## Decisões Técnicas e Arquitetura
 
-Se quiser executar o projeto em ambiente de desenvolvimento local:
+Expliquei em detalhes como pensei a segurança, a escolha do Supabase, o cálculo dos fusos horários e as regras trabalhistas em um documento separado:
 
-### 1. Clonar o repositorio
-```bash
-git clone https://github.com/gppacheco/dnd-jornada.git
-cd dnd-jornada/dnd-jornada/web
-```
-
-### 2. Instalar dependencias
-```bash
-npm install
-```
-
-### 3. Configurar variaveis de ambiente
-Crie o arquivo de ambiente a partir do exemplo fornecido:
-```bash
-cp src/environments/environment.example.ts src/environments/environment.ts
-```
-Preencha a URL e a chave publica Anon do seu projeto Supabase no arquivo `src/environments/environment.ts`.
-
-### 4. Executar o servidor de desenvolvimento
-```bash
-npm start
-```
-Abra o navegador no endereco `http://localhost:4200`.
+[Ler o documento de Decisões Técnicas (DECISOES_TECNICAS.md)](DECISOES_TECNICAS.md)
 
 ---
 
-## Tecnologias Utilizadas
+## Como Rodar o Projeto no Computador
 
-- Frontend: Angular 19 (arquitetura moderna com Signals, componentes standalone e controle fino de estado).
-- Estilizacao: CSS3 puro, responsivo, com design escuro e tecnicas de glassmorphism.
-- Backend e Persistencia: Supabase (PostgreSQL relacional com Row Level Security e autenticacao JWT).
-- Geolocalizacao: Geolocation API com alta precisao, sintonizacao continua e filtro anti-coordenadas nulas.
+Caso queira executar o código na sua máquina:
+
+1. Clone o repositório e acesse a pasta do projeto:
+   ```bash
+   git clone https://github.com/gppacheco/dnd-jornada.git
+   cd dnd-jornada/dnd-jornada/web
+   ```
+
+2. Instale as dependências:
+   ```bash
+   npm install
+   ```
+
+3. Configure o arquivo de ambiente:
+   ```bash
+   cp src/environments/environment.example.ts src/environments/environment.ts
+   ```
+   Informe a URL e a chave pública do Supabase no arquivo `src/environments/environment.ts`.
+
+4. Inicie o sistema:
+   ```bash
+   npm start
+   ```
+   Acesse no navegador pelo endereço `http://localhost:4200`.
