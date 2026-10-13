@@ -66,6 +66,8 @@ Em vez de depender de uma leitura unica instantanea (que frequentemente traz err
 ### Auditoria no Google Maps
 O painel gera dinamicamente um link direto para o Google Maps a partir das coordenadas coletadas, permitindo que colaborador e gestor confiram a exatidao da rua e do local registrado.
 
+![Calibracao de Geolocalizacao e Link do Google Maps](./docs/screenshots/desktop_geolocalizacao_calibracao.png)
+
 ### Resguardo Legal (Caso o GPS esteja desligado)
 Se o colaborador estiver em um dispositivo sem suporte a GPS ou optar por nao fornecer a permissao, o sistema nao impede o registro do ponto. Legalmente, a empresa nao pode inviabilizar o registro da jornada cumprida pelo empregado. No entanto, o sistema grava a ocorrencia como "Localizacao Nao Verificada", alertando imediatamente o gestor e o RH no painel para averiguação interna.
 

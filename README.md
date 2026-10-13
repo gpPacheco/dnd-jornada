@@ -16,7 +16,22 @@ A aplicacao esta publicada e pode ser testada diretamente pelo navegador:
 
 ### Versao Desktop (Painel do Colaborador, Gestor e RH)
 
-![Dashboard Desktop](./docs/screenshots/desktop_dashboard.jpg)
+Telas da aplicacao em uso no computador:
+
+#### Tela de Login
+![Tela de Login Desktop](./docs/screenshots/desktop_login.png)
+
+#### Painel Principal - Inicio de Intervalo
+![Inicio de Intervalo Desktop](./docs/screenshots/desktop_iniciar_pausa.png)
+
+#### Painel Principal - Encerramento de Jornada
+![Encerramento de Jornada Desktop](./docs/screenshots/desktop_encerrar_jornada.png)
+
+#### Quadro Semanal e Regras do Expediente
+![Quadro Semanal Desktop](./docs/screenshots/desktop_quadro_semanal.png)
+
+#### Calibracao de Geolocalizacao em Tempo Real e Link para o Google Maps
+![Calibracao de Geolocalizacao Desktop](./docs/screenshots/desktop_geolocalizacao_calibracao.png)
 
 ---
 
