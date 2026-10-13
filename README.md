@@ -1,34 +1,34 @@
-# ⏱️ D&D Jornada — Controle de Ponto Inteligente
+# D&D Jornada — Controle de Ponto Inteligente
 
-Sistema de controle de ponto eletrônico desenvolvido para empresas com equipes distribuídas entre o **Brasil** e a **Europa** (Portugal e Espanha). O objetivo do projeto foi criar uma solução segura, intuitiva e em total conformidade com as regras da CLT, permitindo que colaboradores batam ponto de qualquer lugar sem confusão de fusos horários.
-
+Sistema de controle de ponto eletrônico desenvolvido para empresas com equipes distribuídas entre o **Brasil** e a **Europa**. 
+ 
 ---
 
 ## 🌐 Acesso Online (Deploy na Vercel)
 
 A aplicação está pronta para ser testada diretamente pelo navegador, sem necessidade de instalar nada localmente:
 
-👉 **[Acesse a Aplicação na Vercel](COLOQUE_SEU_LINK_DA_VERCEL_AQUI)**
+ **[Acesse a Aplicação na Vercel](https://dnd-jornada.vercel.app)**
 
 ---
 
-## 📸 Demonstração Visual (Prints do Sistema)
+## Demonstração Visual (Prints do Sistema)
 
-### 🖥️ Versão Desktop (Painel do Colaborador, Gestor e RH)
+### Versão Desktop (Painel do Colaborador, Gestor e RH)
 
 <!-- Adicione o print da tela do computador aqui -->
-> 🖼️ *[Cole aqui o print da tela Desktop: `![Demonstração Desktop](link_ou_caminho_da_imagem)`]*
+> *[Cole aqui o print da tela Desktop: `![Demonstração Desktop](link_ou_caminho_da_imagem)`]*
 
 ---
 
-### 📱 Versão Mobile (Aplicativo para Celular)
+### Versão Mobile (Aplicativo para Celular)
 
 <!-- Adicione o print da tela do celular aqui -->
-> 📱 *[Cole aqui o print da tela Mobile: `![Demonstração Mobile](link_ou_caminho_da_imagem)`]*
+> *[Cole aqui o print da tela Mobile: `![Demonstração Mobile](link_ou_caminho_da_imagem)`]*
 
 ---
 
-## 👥 Contas de Acesso para Testes
+## Contas de Acesso para Testes
 
 O banco de dados já possui contas configuradas para testar todos os cenários da aplicação. Todas utilizam a mesma senha: `password123`.
 
@@ -42,11 +42,9 @@ O banco de dados já possui contas configuradas para testar todos os cenários d
 
 ---
 
-## 📖 Decisões Técnicas e Regras de Negócio
+## Decisões Técnicas e Regras de Negócio
 
-Para entender a fundo como pensamos o projeto, por que usamos o Supabase, como protegemos o banco e todas as regras que garantem o funcionamento sem falhas (incluindo o que acontece se o colaborador desligar o GPS ou passar de 10h de trabalho):
-
-👉 **[Acesse o documento de Decisões Técnicas (DECISOES_TECNICAS.md)](DECISOES_TECNICAS.md)**
+**[Acesse o documento de Decisões Técnicas (DECISOES_TECNICAS.md)](DECISOES_TECNICAS.md)**
 
 ---
 
@@ -80,28 +78,9 @@ Abra no navegador em: **[http://localhost:4200](http://localhost:4200)**
 
 ---
 
-## 📱 Como Rodar no Celular (Download do APK / PWA)
+## Como Rodar no Celular (Download do APK / PWA)
 
-A aplicação foi pensada desde o início para funcionar perfeitamente em telas pequenas de smartphones. Existem duas formas fáceis de usá-la no celular:
-
-### 1. Gerando o APK para Android (Nativo)
-O projeto está pronto para empacotamento com Capacitor:
-1. Gere o build do projeto:
-   ```bash
-   npm run build
-   ```
-2. Adicione e sincronize o suporte para Android:
-   ```bash
-   npx cap add android
-   npx cap sync
-   ```
-3. Abra no Android Studio para gerar o instalador `.apk`:
-   ```bash
-   npx cap open android
-   ```
-4. No menu superior do Android Studio, clique em **Build > Build Bundle(s) / APK(s) > Build APK(s)**. O arquivo `.apk` gerado pode ser enviado para qualquer aparelho Android e instalado diretamente.
-
-### 2. Acesso Direto pelo Navegador do Celular (PWA)
+### 1. Acesso Direto pelo Navegador do Celular (PWA)
 Você não precisa gerar o APK para testar agora:
 1. Abra o link do deploy da Vercel ou o IP da sua máquina no navegador do celular (ex: Chrome ou Safari).
 2. Toque no botão de menu do navegador e selecione **"Adicionar à tela de início"**.
@@ -109,7 +88,7 @@ Você não precisa gerar o APK para testar agora:
 
 ---
 
-## 🛠️ Tecnologias Usadas
+## Tecnologias Usadas
 
 - **Frontend:** Angular 19 (com Signals para reatividade fluida e componentes modernos)
 - **Estilos:** CSS3 limpo e responsivo com tema escuro e glassmorphism

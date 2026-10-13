@@ -59,22 +59,33 @@
       </div>
 
       <!-- Geolocation Verification Banner -->
-      <div class="geo-status-bar" [class.geo-granted]="geoStatus() === 'granted'" [class.geo-denied]="geoStatus() === 'denied'">
+      <div class="geo-status-bar" 
+           [class.geo-granted]="geoStatus() === 'granted'" 
+           [class.geo-low]="geoStatus() === 'low_accuracy'"
+           [class.geo-denied]="geoStatus() === 'denied'">
         <div class="geo-info">
           <span class="geo-icon">
             @if (geoStatus() === 'granted') { 📍 }
+            @else if (geoStatus() === 'low_accuracy') { 🛰️ }
             @else if (geoStatus() === 'requesting') { ⏳ }
             @else { ⚠️ }
           </span>
           <div class="geo-text">
-            <strong>Precisão Real de Geolocalização:</strong>
+            <strong>Precisão Real de Geolocalização (Meta: ≤ 20 metros):</strong>
             <p>{{ geoMessage() }}</p>
+            @if (geolocation()?.mapUrl) {
+              <a [href]="geolocation()!.mapUrl" target="_blank" rel="noopener noreferrer" class="geo-map-link">
+                🗺️ Conferir no Google Maps ↗
+              </a>
+            }
           </div>
         </div>
-        <button class="btn-geo-refresh" (click)="requestGeolocation()" title="Atualizar precisão GPS">
-          @if (geoStatus() === 'requesting') { ⏳ Verificando... }
-          @else { 🔄 Atualizar GPS }
-        </button>
+        <div class="geo-actions">
+          <button class="btn-geo-refresh" (click)="requestGeolocation()" title="Calibrar satélites para obter precisão de até 20m">
+            @if (geoStatus() === 'requesting') { ⏳ Calibrando (≤20m)... }
+            @else { 🔄 Calibrar GPS (≤20m) }
+          </button>
+        </div>
       </div>
 
       <!-- Action Button -->

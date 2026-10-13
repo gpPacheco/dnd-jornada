@@ -500,6 +500,11 @@ tbody td {
   border-color: rgba(16, 185, 129, 0.3);
 }
 
+.geo-status-bar.geo-low {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
 .geo-status-bar.geo-denied {
   background: rgba(239, 68, 68, 0.08);
   border-color: rgba(239, 68, 68, 0.3);
@@ -510,6 +515,27 @@ tbody td {
   align-items: center;
   gap: 12px;
   text-align: left;
+}
+
+.geo-map-link {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #60a5fa;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.geo-map-link:hover {
+  color: #93c5fd;
+}
+
+.geo-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .geo-icon {

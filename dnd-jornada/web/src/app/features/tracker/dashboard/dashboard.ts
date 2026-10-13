@@ -42,9 +42,18 @@ export class Dashboard implements OnInit, OnDestroy {
   toastMessage = signal('');
   toastType = signal<'success' | 'error' | 'warning'>('success');
 
-  // Geolocalização
-  geolocation = signal<{ lat: number; lng: number; accuracy: number } | null>(null);
-  geoStatus = signal<'idle' | 'requesting' | 'granted' | 'denied' | 'unavailable'>('idle');
+  // Geolocalização de Alta Precisão (Meta: <= 20 metros)
+  readonly TARGET_ACCURACY = 20;
+  private watchId: number | null = null;
+
+  geolocation = signal<{
+    lat: number;
+    lng: number;
+    accuracy: number;
+    isPrecise: boolean;
+    mapUrl: string;
+  } | null>(null);
+  geoStatus = signal<'idle' | 'requesting' | 'granted' | 'low_accuracy' | 'denied' | 'unavailable'>('idle');
   geoMessage = signal<string>('Clique para validar precisão real do GPS');
 
   // Modal de Justificativa
@@ -145,46 +154,142 @@ export class Dashboard implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.timerRef) clearInterval(this.timerRef);
+    if (this.watchId !== null && typeof navigator !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.clearWatch(this.watchId);
+      this.watchId = null;
+    }
   }
 
-  // --- Geolocalização com Precisão Real ---
+  // --- Geolocalização com Alta Precisão Real (Meta: ≤ 20 metros) ---
 
-  requestGeolocation(): Promise<{ lat: number; lng: number; accuracy: number } | null> {
+  requestGeolocation(): Promise<{ lat: number; lng: number; accuracy: number; isPrecise: boolean } | null> {
     if (typeof window === 'undefined' || !navigator.geolocation) {
       this.geoStatus.set('unavailable');
-      this.geoMessage.set('Geolocalização não suportada neste navegador.');
+      this.geoMessage.set('Geolocalização não suportada neste dispositivo/navegador.');
       return Promise.resolve(null);
     }
 
+    // Cancela qualquer watch anterior ativo
+    if (this.watchId !== null) {
+      navigator.geolocation.clearWatch(this.watchId);
+      this.watchId = null;
+    }
+
     this.geoStatus.set('requesting');
-    this.geoMessage.set('Obtendo coordenadas GPS com precisão real...');
+    this.geoMessage.set('Sintonizando satélites GPS para atingir precisão real de até 20m...');
 
     return new Promise((resolve) => {
-      navigator.geolocation.getCurrentPosition(
+      let bestFix: { lat: number; lng: number; accuracy: number } | null = null;
+      let hasCompleted = false;
+
+      // Limite de tempo para calibração máxima (12 segundos)
+      const calibrationTimer = setTimeout(() => {
+        if (this.watchId !== null) {
+          navigator.geolocation.clearWatch(this.watchId);
+          this.watchId = null;
+        }
+
+        if (!hasCompleted) {
+          hasCompleted = true;
+          if (bestFix && !this.isOceanCoordinate(bestFix.lat, bestFix.lng)) {
+            const isPrecise = bestFix.accuracy <= this.TARGET_ACCURACY;
+            this.applyLocation(bestFix, isPrecise);
+            resolve({ ...bestFix, isPrecise });
+          } else {
+            this.geoStatus.set('denied');
+            this.geoMessage.set('Não foi possível obter sinal GPS terrestre válido. Verifique se o GPS está ligado e VPN desativada.');
+            resolve(null);
+          }
+        }
+      }, 12000);
+
+      this.watchId = navigator.geolocation.watchPosition(
         (pos) => {
-          const loc = {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            accuracy: Math.round(pos.coords.accuracy)
-          };
-          this.geolocation.set(loc);
-          this.geoStatus.set('granted');
-          this.geoMessage.set(`GPS Ativo: ${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)} (±${loc.accuracy}m)`);
-          resolve(loc);
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const accuracy = Math.round(pos.coords.accuracy);
+
+          // 1. FILTRAGEM: Rejeita Null Island (0, 0 no meio do Atlântico) e coordenadas nulas
+          if (this.isOceanCoordinate(lat, lng)) {
+            console.warn('Coordenada no meio do mar rejeitada:', lat, lng);
+            this.geoMessage.set('Sinal inicial impreciso (coordenada nula). Calibrando sinal terrestre...');
+            return;
+          }
+
+          const currentFix = { lat, lng, accuracy };
+
+          // Atualiza a melhor precisão encontrada
+          if (!bestFix || accuracy < bestFix.accuracy) {
+            bestFix = currentFix;
+          }
+
+          // Se atingiu a precisão de 20 metros ou melhor:
+          if (accuracy <= this.TARGET_ACCURACY) {
+            clearTimeout(calibrationTimer);
+            if (this.watchId !== null) {
+              navigator.geolocation.clearWatch(this.watchId);
+              this.watchId = null;
+            }
+            if (!hasCompleted) {
+              hasCompleted = true;
+              this.applyLocation(currentFix, true);
+              resolve({ ...currentFix, isPrecise: true });
+            }
+          } else {
+            // Em calibração: informa ao usuário a precisão atual enquanto busca <= 20m
+            this.geoStatus.set('low_accuracy');
+            this.geoMessage.set(`Calibrando GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)} (Precisão atual: ±${accuracy}m — buscando ≤ 20m)`);
+          }
         },
         (err) => {
-          console.warn('Geolocation denied or error:', err.message);
-          this.geoStatus.set('denied');
-          if (err.code === 1) { // PERMISSION_DENIED
-            this.geoMessage.set('Permissão de GPS necessária para validação de presença física.');
-          } else {
-            this.geoMessage.set('Não foi possível obter coordenadas GPS no momento.');
+          console.warn('Geolocation error:', err.message);
+          // Se já capturamos um fix anterior, não falha prematuramente
+          if (!bestFix) {
+            clearTimeout(calibrationTimer);
+            if (this.watchId !== null) {
+              navigator.geolocation.clearWatch(this.watchId);
+              this.watchId = null;
+            }
+            if (!hasCompleted) {
+              hasCompleted = true;
+              this.geoStatus.set('denied');
+              if (err.code === 1) { // PERMISSION_DENIED
+                this.geoMessage.set('Permissão de GPS necessária para validação de presença física.');
+              } else {
+                this.geoMessage.set('Sinal de GPS indisponível no momento. Certifique-se de que o GPS está ativo.');
+              }
+              resolve(null);
+            }
           }
-          resolve(null);
         },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
       );
     });
+  }
+
+  // Identifica coordenadas no meio do mar (Null Island 0°, 0° e proximidades marítimas nulas)
+  private isOceanCoordinate(lat: number, lng: number): boolean {
+    if (lat === 0 && lng === 0) return true;
+    if (Math.abs(lat) < 0.1 && Math.abs(lng) < 0.1) return true; // Golfo da Guiné / Null Island
+    if (isNaN(lat) || isNaN(lng)) return true;
+    return false;
+  }
+
+  private applyLocation(loc: { lat: number; lng: number; accuracy: number }, isPrecise: boolean) {
+    const mapUrl = `https://www.google.com/maps?q=${loc.lat},${loc.lng}`;
+    this.geolocation.set({ ...loc, isPrecise, mapUrl });
+
+    if (isPrecise) {
+      this.geoStatus.set('granted');
+      this.geoMessage.set(`GPS Alta Precisão: ${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)} (±${loc.accuracy}m — Alvo ≤ 20m OK)`);
+    } else {
+      this.geoStatus.set('low_accuracy');
+      this.geoMessage.set(`GPS Precisão Moderada: ${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)} (±${loc.accuracy}m — Meta ideal: ≤ 20m)`);
+    }
   }
 
   // --- Modal de Justificativa ---
@@ -277,7 +382,10 @@ export class Dashboard implements OnInit, OnDestroy {
 
       const baseLabel = labels[next.type] || 'Registrado!';
       if (this.geoStatus() === 'granted') {
-        this.showToast(`${baseLabel} 📍 GPS validado com precisão.`, 'success');
+        this.showToast(`${baseLabel} 📍 GPS validado com alta precisão (≤20m).`, 'success');
+      } else if (this.geoStatus() === 'low_accuracy') {
+        const acc = this.geolocation()?.accuracy ? ` (±${this.geolocation()!.accuracy}m)` : '';
+        this.showToast(`${baseLabel} 🛰️ Registrado com GPS aproximado${acc}.`, 'warning');
       } else {
         this.showToast(`${baseLabel} ⚠️ Localização GPS não verificada (permissão ausente).`, 'warning');
       }
